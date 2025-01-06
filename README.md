@@ -1,2 +1,0 @@
-# hackathon
-réseaux de proxémie
