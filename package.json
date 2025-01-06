@@ -11,6 +11,7 @@
     "@capacitor/android": "^6.2.0",
     "@capacitor/cli": "^6.2.0",
     "@capacitor/core": "^6.2.0",
+    "@capacitor/geolocation": "^6.1.0",
     "core-js": "^3.8.3",
     "hakaton": "file:",
     "leaflet": "^1.9.4",
