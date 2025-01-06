@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Carte avec OpenLayers et Géocodage d'Adresse</h1>
+    <h1>Carte avec OpenLayers et Géolocalisation</h1>
 
     <!-- Formulaire pour saisir l'adresse -->
     <input v-model="address" @keyup.enter="searchAddress" placeholder="Entrez une adresse" />
@@ -14,6 +14,9 @@
       <li>zoom : {{ currentZoom }}</li>
       <li>rotation : {{ currentRotation }}</li>
     </ul>
+
+    <!-- Bouton pour obtenir la localisation -->
+    <button @click="getLocation">Obtenir ma position</button>
   </div>
 </template>
 
@@ -22,7 +25,7 @@ import { ref, onMounted } from 'vue';
 import OlMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
+import XYZ from 'ol/source/XYZ';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Point from 'ol/geom/Point';
@@ -37,6 +40,8 @@ const currentCenter = ref([-1.6778, 48.1120]); // Coordonnées de la Place de la
 const currentZoom = ref(16); // Niveau de zoom initial
 const currentRotation = ref(0); // Rotation de la carte (0 = sans rotation)
 const marker = ref(null); // Référence au marqueur
+
+let mapInstance; // Déclarer mapInstance en dehors de onMounted pour qu'elle soit accessible partout
 
 const searchAddress = async () => {
   // Appel au service Nominatim d'OpenStreetMap pour le géocodage de l'adresse
@@ -78,7 +83,7 @@ const updateMap = (lon, lat) => {
       style: new Style({
         image: new CircleStyle({
           radius: 10, // Rayon du point
-          fill: new Fill({ color: 'orange' }), // Remplissage orange
+          fill: new Fill({ color: 'blue' }), // Remplissage bleu
           stroke: new Stroke({ color: 'black', width: 2 }), // Contour noir de 2px
         }),
       }),
@@ -96,19 +101,40 @@ const updateMap = (lon, lat) => {
   mapInstance.getView().setZoom(16); // Zoom sur la position
 };
 
-let mapInstance;
+const getLocation = () => {
+  console.log("Demande de géolocalisation...");
+  // Vérifier si la géolocalisation est disponible
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log("Position récupérée :", position);
+        const lon = position.coords.longitude;
+        const lat = position.coords.latitude;
+        updateMap(lon, lat); // Mettre à jour la carte avec la position récupérée
+      },
+      (error) => {
+        console.error("Erreur de géolocalisation : ", error.message);
+        alert("Impossible de récupérer votre position. Assurez-vous que votre GPS est activé.");
+      }
+    );
+  } else {
+    alert("La géolocalisation n'est pas supportée par votre navigateur.");
+  }
+};
 
 onMounted(() => {
-  // Initialiser la carte avec OpenLayers
+  // Initialiser la carte avec un style minimaliste
   mapInstance = new OlMap({
-    target: map.value, // Le conteneur HTML de la carte
+    target: map.value,
     layers: [
       new TileLayer({
-        source: new OSM(), // Charger les tuiles OpenStreetMap
+        source: new XYZ({
+          url: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', // Style Toner Lite
+        }),
       }),
     ],
     view: new View({
-      center: fromLonLat(currentCenter.value), 
+      center: fromLonLat(currentCenter.value), // Convertir les coordonnées
       zoom: currentZoom.value,
       rotation: currentRotation.value,
     }),
