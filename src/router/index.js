@@ -1,27 +1,29 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import AboutView from '../views/AboutView.vue';
+import MapPage from '../views/MapPage.vue';
+import LoginView from '../views/LoginView.vue';
 
 const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView
-  },
-  {
-    path: '/about',
-    name: 'about',
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  },
-  {
-    path: '/map', // La route pour la carte
-    name: 'map',
-    component: () => import(/* webpackChunkName: "map" */ '../views/MapPage.vue') // Lazy-load du composant de la carte
-  }
-]
+  { path: '/login', name: 'Login', component: LoginView },
+  { path: '/', name: 'Home', component: HomeView },
+  { path: '/about', name: 'About', component: AboutView },
+  { path: '/map', name: 'Map', component: MapPage },
+];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
-export default router
+// Redirection pour les utilisateurs non authentifiés
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('authenticated') === 'true';
+  if (to.name !== 'Login' && !isAuthenticated) {
+    next({ name: 'Login' });
+  } else {
+    next();
+  }
+});
+
+export default router;

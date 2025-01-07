@@ -1,11 +1,22 @@
 <template>
-  <nav>
-    <router-link to="/">Accueil</router-link> |
+   <nav v-if="showNavigation">
+      <router-link to="/">Accueil</router-link> |
       <router-link to="/about">À propos</router-link> |
       <router-link to="/map">Carte</router-link>
-  </nav>
-  <router-view/>
+    </nav>
+    <router-view />
 </template>
+
+<script>
+export default {
+  computed: {
+    showNavigation() {
+      // Vérifie si la route actuelle est différente de '/login'
+      return this.$route.path !== '/login';
+    },
+  },
+};
+</script>
 
 <style>
 #app {
