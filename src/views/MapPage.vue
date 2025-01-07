@@ -3,10 +3,14 @@
     <h1>Carte avec OpenLayers et Géocodage d'Adresse</h1>
 
     <!-- Formulaire pour saisir l'adresse -->
-    <input v-model="address" @keyup.enter="searchAddress" placeholder="Entrez une adresse" />
+    <input
+      v-model="address"
+      @keyup.enter="searchAddress"
+      placeholder="Entrez une adresse"
+    />
 
     <!-- La carte -->
-    <div ref="map" style="height: 500px;"></div>
+    <div ref="map" style="height: 500px"></div>
 
     <!-- Bouton pour la géolocalisation -->
     <button @click="getLocation">Obtenir ma position</button>
@@ -14,23 +18,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import OlMap from 'ol/Map';
-import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import XYZ from 'ol/source/XYZ';
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
-import Point from 'ol/geom/Point';
-import Feature from 'ol/Feature';
-import Circle from 'ol/geom/Circle';
-import { fromLonLat } from 'ol/proj';
-import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
-import 'ol/ol.css';
-import { Geolocation } from '@capacitor/geolocation';
-import { Capacitor } from '@capacitor/core';
+import { ref, onMounted } from "vue";
+import OlMap from "ol/Map";
+import View from "ol/View";
+import TileLayer from "ol/layer/Tile";
+import XYZ from "ol/source/XYZ";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import Point from "ol/geom/Point";
+import Feature from "ol/Feature";
+import Circle from "ol/geom/Circle";
+import { fromLonLat } from "ol/proj";
+import { Style, Circle as CircleStyle, Fill, Stroke } from "ol/style";
+import "ol/ol.css";
+import { Geolocation } from "@capacitor/geolocation";
+import { Capacitor } from "@capacitor/core";
 
-const address = ref('');
+const address = ref("");
 const map = ref(null);
 const mapInstance = ref(null); // Référence à l'instance de la carte
 const userMarkerLayer = ref(null); // Couche pour le marqueur de l'utilisateur
@@ -63,9 +67,9 @@ const addRangeCircles = (lon, lat) => {
   const coordinates = fromLonLat([lon, lat]);
 
   const ranges = [
-    { radius: 5000, color: 'rgba(0, 255, 0, 0.2)' }, // 5 km (vert)
-    { radius: 10000, color: 'rgba(255, 165, 0, 0.2)' }, // 10 km (orange)
-    { radius: 20000, color: 'rgba(255, 0, 0, 0.2)' }, // 20 km (rouge)
+    { radius: 5000, color: "rgba(0, 255, 0, 0.2)" }, // 5 km (vert)
+    { radius: 10000, color: "rgba(255, 165, 0, 0.2)" }, // 10 km (orange)
+    { radius: 20000, color: "rgba(255, 0, 0, 0.2)" }, // 20 km (rouge)
   ];
 
   ranges.forEach(({ radius, color }) => {
@@ -91,15 +95,13 @@ const addRangeCircles = (lon, lat) => {
 
 // Fonction pour mettre à jour la carte avec un nouveau marqueur
 const updateMap = (lon, lat, isUserLocation = false) => {
-  clearOldLayers(); // Supprimer toutes les anciennes couches
-
   const coordinates = fromLonLat([lon, lat]);
 
   const markerStyle = new Style({
     image: new CircleStyle({
       radius: isUserLocation ? 7 : 10,
-      fill: new Fill({ color: isUserLocation ? 'blue' : 'orange' }),
-      stroke: new Stroke({ color: 'black', width: 2 }),
+      fill: new Fill({ color: isUserLocation ? "blue" : "orange" }),
+      stroke: new Stroke({ color: "black", width: 2 }),
     }),
   });
 
@@ -118,6 +120,7 @@ const updateMap = (lon, lat, isUserLocation = false) => {
   mapInstance.value.addLayer(markerLayer);
 
   if (isUserLocation) {
+    clearOldLayers(); // Supprimer toutes les anciennes couches
     userMarkerLayer.value = markerLayer;
     addRangeCircles(lon, lat); // Ajouter les cercles autour de l'utilisateur
   } else {
@@ -132,7 +135,10 @@ const updateMap = (lon, lat, isUserLocation = false) => {
 // Fonction pour obtenir la position actuelle
 const getLocation = async () => {
   try {
-    if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+    if (
+      Capacitor.getPlatform() === "android" ||
+      Capacitor.getPlatform() === "ios"
+    ) {
       const { granted } = await Geolocation.requestPermissions();
       if (!granted) {
         // alert("L'autorisation de géolocalisation est requise.");
@@ -146,15 +152,17 @@ const getLocation = async () => {
 
     updateMap(lon, lat, true); // Ajouter la position utilisateur
   } catch (error) {
-    console.error('Erreur de géolocalisation', error);
-    alert('Impossible de récupérer votre position.');
+    console.error("Erreur de géolocalisation", error);
+    alert("Impossible de récupérer votre position.");
   }
 };
 
 // Fonction pour rechercher une adresse
 const searchAddress = async () => {
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address.value}`);
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${address.value}`
+    );
     const data = await response.json();
 
     if (data.length > 0) {
@@ -163,10 +171,10 @@ const searchAddress = async () => {
 
       updateMap(lon, lat, false); // Ajouter le marqueur pour l'adresse
     } else {
-      alert('Adresse non trouvée.');
+      alert("Adresse non trouvée.");
     }
   } catch (error) {
-    console.error('Erreur lors de la recherche de l\'adresse', error);
+    console.error("Erreur lors de la recherche de l'adresse", error);
   }
 };
 
@@ -177,12 +185,12 @@ onMounted(() => {
     layers: [
       new TileLayer({
         source: new XYZ({
-          url: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+          url: "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         }),
       }),
     ],
     view: new View({
-      center: fromLonLat([-1.6778, 48.1120]), // Rennes
+      center: fromLonLat([-1.6778, 48.112]), // Rennes
       zoom: 16,
     }),
   });
