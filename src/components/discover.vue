@@ -1,143 +1,199 @@
 <template>
-    <div class="disco">
-      <div class="carousel-container">
-        <div class="carousel-wrapper" ref="carousel">
-          <img 
-            v-for="(image, index) in images" 
-            :key="index" 
-            :src="require(`@/assets/logo.png`)" 
-            alt="Logo" 
-            class="carousel-image" 
-          />
-        </div>
-        <!-- Boutons pour naviguer -->
-        <button class="carousel-btn prev" @click="scrollLeft">⬅</button>
-        <button class="carousel-btn next" @click="scrollRight">➡</button>
+  <div class="disco">
+    <h1>{{ msg }}</h1>
+
+    <div class="carousel-container">
+      <div class="carousel-wrapper" ref="carousel">
+        <!-- Utilisation de router-link pour les éléments cliquables -->
+        <router-link 
+          v-for="(item, index) in items" 
+          :key="index" 
+          :to="`/${item.id}${item.name}`" 
+          class="carousel-slide"
+        >
+          <table class="info-table">
+            <tbody>
+              <tr>
+                <!-- Colonne gauche : Image -->
+                <td class="image-cell">
+                  <img 
+                    :src="require(`@/assets/logo.png`)" 
+                    alt="Logo" 
+                    class="carousel-image" 
+                  />
+                </td>
+                <!-- Colonne droite : Informations -->
+                <td class="info-cell">
+                  <p><strong>{{ item.name }}</strong></p>
+                  <p><strong>Adresse :</strong> <br> {{ item.address }}</p>
+                  <p><strong>Téléphone :</strong> <br> {{ item.phone }}</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </router-link>
       </div>
-  
-      <!-- Autres contenus HTML -->
-      <h1>{{ msg }}</h1>
-      <p>
-        For a guide and recipes on how to configure / customize this project,<br />
-        check out the
-        <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-      </p>
-      <h3>Installed CLI Plugins</h3>
-      <ul>
-        <li>
-          <a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a>
-        </li>
-        <li>
-          <a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a>
-        </li>
-      </ul>
-      <h3>Essential Links</h3>
-      <ul>
-        <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-        <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-        <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-        <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-        <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-      </ul>
-      <h3>Ecosystem</h3>
-      <ul>
-        <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-        <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-        <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-        <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-        <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-      </ul>
+      <!-- Boutons pour naviguer -->
+      <button class="carousel-btn prev" @click="scrollLeft">⬅</button>
+      <button class="carousel-btn next" @click="scrollRight">➡</button>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "ImageCarousel",
-    data() {
-      return {
-        images: Array(3).fill(require('@/assets/logo.png')), // <- Le nombre d'images change ici
-        msg: "Welcome to Vue!",
-      };
+  </div>
+</template>
+
+<script>
+export default {
+  name: "ImageCarousel",
+  props: {
+    msg: String
+  },
+  data() {
+    return {
+      items: [
+        {
+          id: 1,
+          name: "Entreprise A",
+          address: "123 Rue Principale, Paris",
+          phone: "01 23 45 67 89"
+        },
+        {
+          id: 2,
+          name: "Entreprise B",
+          address: "456 Rue Secondaire, Lyon",
+          phone: "04 56 78 90 12"
+        },
+        {
+          id: 3,
+          name: "Entreprise C",
+          address: "789 Boulevard Central, Marseille",
+          phone: "03 21 43 65 87"
+        },
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },   
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },
+        {
+          id: 4,
+          name: "Entreprise D",
+          address: "Place de la Mairie, Rennes",
+          phone: "03 21 43 65 87"
+        },
+      ]
+    };
+  },
+  methods: {
+    scrollLeft() {
+      const carousel = this.$refs.carousel;
+      const slideWidth = carousel.querySelector(".carousel-slide").offsetWidth + 10; // Inclut l'espacement
+      carousel.scrollBy({ left: -slideWidth, behavior: "smooth" });
     },
-    methods: {
-      scrollLeft() {
-        const carousel = this.$refs.carousel;
-        const imageWidth = carousel.querySelector(".carousel-image").offsetWidth + 10; // 10px pour le gap
-        carousel.scrollBy({ left: -imageWidth, behavior: "smooth" });
-      },
-      scrollRight() {
-        const carousel = this.$refs.carousel;
-        const imageWidth = carousel.querySelector(".carousel-image").offsetWidth + 10; // 10px pour le gap
-        carousel.scrollBy({ left: imageWidth, behavior: "smooth" });
-      },
-    },
-  };
-  </script>
+    scrollRight() {
+      const carousel = this.$refs.carousel;
+      const slideWidth = carousel.querySelector(".carousel-slide").offsetWidth + 10; // Inclut l'espacement
+      carousel.scrollBy({ left: slideWidth, behavior: "smooth" });
+    }
+  }
+};
+</script>
+
   
   <style scoped>
   .carousel-container {
-    position: relative;
-    width: 100%;
-    overflow: hidden; /* Masque les images en dehors du cadre */
-  }
-  
-  .carousel-wrapper {
-    display: flex;
-    gap: 10px; /* Espacement entre les images */
-    overflow-x: auto; /* Autorise le défilement horizontal */
-    scroll-behavior: smooth; /* Défilement fluide */
-  }
-  
-  .carousel-image {
-    width: 200px; /* Ajustez la taille de vos images */
-    height: auto;
-    flex-shrink: 0; /* Empêche les images de se rétrécir */
-    border-radius: 10px; /* Optionnel : bordures arrondies */
-  }
-  
-  .carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    z-index: 10;
-  }
-  
-  .carousel-btn.prev {
-    left: 10px;
-  }
-  
-  .carousel-btn.next {
-    right: 10px;
-  }
-  
-  h3 {
-    margin: 40px 0 0;
-  }
-  
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  li {
-    display: inline-block;
-    margin: 0 10px;
-  }
-  
-  a {
-    color: #42b983;
-  }
-  
-  .header-image {
-    width: 100px; /* Largeur fixe */
-    height: 100px; /* Hauteur fixe */
-    object-fit: cover; /* pour une meilleure mise en forme */
-    margin-bottom: 20px; /* espace sous l'image */
-  }
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* Masque les slides en dehors du cadre */
+}
+
+.carousel-wrapper {
+  display: flex;
+  gap: 20px; /* Espacement horizontal entre les slides (augmenté à 20px) */
+  overflow-x: auto; /* Autorise le défilement horizontal */
+  scroll-behavior: smooth; /* Défilement fluide */
+}
+
+.carousel-slide {
+  display: flex;
+  flex-shrink: 0; /* Empêche les slides de se rétrécir */
+  width: 300px; /* Largeur fixe pour chaque slide */
+  padding: 10px;
+  background-color: #f9f9f9; /* Fond léger pour contraste */
+  border-radius: 10px;
+}
+
+.info-table {
+  width: 100%;
+  table-layout: fixed; /* Garantit une disposition égale */
+  border: 1px solid #ccc; /* Bordure autour des tableaux */
+  border-radius: 10px; /* Optionnel : arrondit les coins des tableaux */
+  border-collapse: separate; /* Empêche les cellules de fusionner les bordures */
+  background: #fff; /* Fond blanc dans le tableau */
+}
+
+.image-cell {
+  width: 40%; /* Image occupe 40% de la largeur */
+}
+
+.info-cell {
+  width: 60%; /* Informations occupent 60% */
+  padding-left: 10px;
+  vertical-align: top;
+}
+
+.info-table td {
+  border: 1px solid #ddd; /* Bordure autour des cellules */
+  padding: 10px; /* Espacement interne des cellules */
+}
+
+.carousel-image {
+  width: 100%;
+  height: auto;
+  border-radius: 10px; /* Bordures arrondies pour l'image */
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
   </style>
   
