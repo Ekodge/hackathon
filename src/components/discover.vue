@@ -6,11 +6,12 @@
       <div class="carousel-wrapper" ref="carousel">
         <!-- Utilisation de router-link pour les éléments cliquables -->
         <router-link 
-          v-for="(item, index) in items" 
-          :key="index" 
-          :to="`/${item.id}${item.name}`" 
-          class="carousel-slide"
+        v-for="(item, index) in items" 
+        :key="index" 
+        :to="`/${item.id}${item.name}`" 
+        class="carousel-slide no-link"
         >
+
           <table class="info-table">
             <tbody>
               <tr>
@@ -143,6 +144,11 @@ export default {
   padding: 10px;
   background-color: #f9f9f9; /* Fond léger pour contraste */
   border-radius: 10px;
+}
+
+.no-link {
+  text-decoration: none !important;
+  color: black !important;
 }
 
 .info-table {
