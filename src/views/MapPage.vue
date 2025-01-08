@@ -1,19 +1,14 @@
 <template>
-  <div>
-    <h1>Carte avec OpenLayers et Géocodage d'Adresse</h1>
-
-    <!-- Formulaire pour saisir l'adresse -->
-    <input
-      v-model="address"
-      @keyup.enter="searchAddress"
-      placeholder="Entrez une adresse"
-    />
+  <div class="container">
+    <div class="controls">
+      <!-- Formulaire pour saisir l'adresse -->
+      <input v-model="address" @keyup.enter="searchAddress" placeholder="Entrez une adresse" />
+      <!-- Bouton pour la géolocalisation -->
+      <button @click="getLocation">Obtenir ma position</button>
+    </div>
 
     <!-- La carte -->
-    <div ref="map" style="height: 500px"></div>
-
-    <!-- Bouton pour la géolocalisation -->
-    <button @click="getLocation">Obtenir ma position</button>
+    <div ref="map" class="map"></div>
   </div>
 </template>
 
@@ -198,8 +193,22 @@ onMounted(() => {
 </script>
 
 <style scoped>
-#map {
+.container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 94px);
+}
+
+.controls {
+  padding: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.map {
+  flex: 1;
+  /* La carte occupe tout l'espace restant */
   width: 100%;
-  height: 500px;
 }
 </style>
