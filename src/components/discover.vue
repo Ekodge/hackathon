@@ -5,23 +5,15 @@
     <div class="carousel-container">
       <div class="carousel-wrapper" ref="carousel">
         <!-- Utilisation de router-link pour les éléments cliquables -->
-        <router-link 
-        v-for="(item, index) in items" 
-        :key="index" 
-        :to="`/${item.id}${item.name}`" 
-        class="carousel-slide no-link"
-        >
+        <router-link v-for="(item, index) in items" :key="index" :to="`/${item.id}${item.name}`"
+          class="carousel-slide no-link">
 
           <table class="info-table">
             <tbody>
               <tr>
                 <!-- Colonne gauche : Image -->
                 <td class="image-cell">
-                  <img 
-                    :src="require(`@/assets/logo.png`)" 
-                    alt="Logo" 
-                    class="carousel-image" 
-                  />
+                  <img :src="require(`@/assets/logo.png`)" alt="Logo" class="carousel-image" />
                 </td>
                 <!-- Colonne droite : Informations -->
                 <td class="info-cell">
@@ -79,7 +71,7 @@ export default {
           name: "Entreprise D",
           address: "Place de la Mairie, Rennes",
           phone: "03 21 43 65 87"
-        },   
+        },
         {
           id: 4,
           name: "Entreprise D",
@@ -122,27 +114,34 @@ export default {
 };
 </script>
 
-  
-  <style scoped>
-  .carousel-container {
+
+<style scoped>
+.carousel-container {
   position: relative;
   width: 100%;
-  overflow: hidden; /* Masque les slides en dehors du cadre */
+  overflow: hidden;
+  /* Masque les slides en dehors du cadre */
 }
 
 .carousel-wrapper {
   display: flex;
-  gap: 20px; /* Espacement horizontal entre les slides (augmenté à 20px) */
-  overflow-x: auto; /* Autorise le défilement horizontal */
-  scroll-behavior: smooth; /* Défilement fluide */
+  gap: 20px;
+  /* Espacement horizontal entre les slides (augmenté à 20px) */
+  overflow-x: auto;
+  /* Autorise le défilement horizontal */
+  scroll-behavior: smooth;
+  /* Défilement fluide */
 }
 
 .carousel-slide {
   display: flex;
-  flex-shrink: 0; /* Empêche les slides de se rétrécir */
-  width: 300px; /* Largeur fixe pour chaque slide */
-  padding: 10px;
-  background-color: #f9f9f9; /* Fond léger pour contraste */
+  flex-shrink: 0;
+  /* Empêche les slides de se rétrécir */
+  width: 300px;
+  /* Largeur fixe pour chaque slide */
+  margin: 10px;
+  background-color: #f9f9f9;
+  /* Fond léger pour contraste */
   border-radius: 10px;
 }
 
@@ -153,32 +152,42 @@ export default {
 
 .info-table {
   width: 100%;
-  table-layout: fixed; /* Garantit une disposition égale */
-  border: 1px solid #ccc; /* Bordure autour des tableaux */
-  border-radius: 10px; /* Optionnel : arrondit les coins des tableaux */
-  border-collapse: separate; /* Empêche les cellules de fusionner les bordures */
-  background: #fff; /* Fond blanc dans le tableau */
+  table-layout: fixed;
+  /* Garantit une disposition égale */
+  border: 1px solid #ccc;
+  /* Bordure autour des tableaux */
+  border-radius: 10px;
+  /* Optionnel : arrondit les coins des tableaux */
+  border-collapse: separate;
+  /* Empêche les cellules de fusionner les bordures */
+  background: #fff;
+  /* Fond blanc dans le tableau */
 }
 
 .image-cell {
-  width: 40%; /* Image occupe 40% de la largeur */
+  width: 40%;
+  /* Image occupe 40% de la largeur */
 }
 
 .info-cell {
-  width: 60%; /* Informations occupent 60% */
+  width: 60%;
+  /* Informations occupent 60% */
   padding-left: 10px;
   vertical-align: top;
 }
 
 .info-table td {
-  border: 1px solid #ddd; /* Bordure autour des cellules */
-  padding: 10px; /* Espacement interne des cellules */
+  border: 1px solid #ddd;
+  /* Bordure autour des cellules */
+  padding: 10px;
+  /* Espacement interne des cellules */
 }
 
 .carousel-image {
   width: 100%;
   height: auto;
-  border-radius: 10px; /* Bordures arrondies pour l'image */
+  border-radius: 10px;
+  /* Bordures arrondies pour l'image */
 }
 
 .carousel-btn {
@@ -200,6 +209,4 @@ export default {
 .carousel-btn.next {
   right: 10px;
 }
-
-  </style>
-  
+</style>
