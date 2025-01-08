@@ -12,7 +12,7 @@
             class="carousel-slide"
           >
             <router-link
-              :to="`/company/${item.id}/${encodeURIComponent(item.name)}`"
+              :to="`/shop/${item.id}`"
               class="carousel-link"
             >
               <div class="carousel-content">
@@ -75,8 +75,7 @@
       async fetchItems() {
         try {
           const userId = localStorage.getItem("userId"); // Récupère l'userId
-          console.log(userId);
-          const response = await fetch(`http://localhost:3000/api/companies/owner/${userId}`);
+          const response = await fetch(`http://localhost:3000/api/shop/owner/${userId}`);
           if (!response.ok) {
             throw new Error("Erreur lors de la récupération des données");
           }

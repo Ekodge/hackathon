@@ -3,8 +3,8 @@
       <h1>Connexion</h1>
       <form @submit.prevent="handleLogin">
         <div>
-          <label for="username">Adresse e-mails :</label>
-          <input id="username" v-model="username" type="text" required />
+          <label for="email">Adresse e-mails :</label>
+          <input id="email" v-model="email" type="text" required />
         </div>
         <div>
           <label for="password">Mot de passe :</label>
@@ -20,7 +20,7 @@
   export default {
     data() {
       return {
-        username: "",
+        email: "",
         password: "",
         errorMessage: "",
         userId: null,
@@ -35,7 +35,7 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              username: this.username,
+              email: this.email,
               password: this.password,  
             }),
           });

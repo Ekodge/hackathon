@@ -8,7 +8,7 @@
         <router-link
           v-for="(item, index) in items"
           :key="index"
-          :to="`/${item.id}${item.name}`"
+          :to="`/shop/${item.id}`"
           class="carousel-slide no-link"
         >
           <table class="info-table">
@@ -51,7 +51,7 @@ export default {
   methods: {
     async fetchItems() {
       try {
-        const response = await fetch("http://localhost:3000/api/companies");
+        const response = await fetch("http://localhost:3000/api/shop");
         if (!response.ok) {
           throw new Error("Erreur lors de la récupération des données");
         }

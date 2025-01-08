@@ -2,27 +2,37 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png"> <br>
 
-    <!-- Champ de recherche pour accéder directement à une entreprise -->
+    <!-- Champ de recherche avec liste des résultats -->
     <div class="search-container">
       <input 
         v-model="searchQuery" 
-        type="text" 
-        placeholder="Entrez l'ID ou le nom de l'entreprise" 
-        class="search-input" 
+        type="text"
+        placeholder="Rechercher une entreprise" 
+        class="search-input"
+        @focus="showResults = true" 
+        @blur="hideResults"
       />
-      <button @click="goToCompany" class="search-btn">Aller à l'entreprise</button>
+      <!-- Liste déroulante des résultats -->
+      <ul v-if="searchResults.length > 0 && showResults" class="results-dropdown">
+        <li 
+          v-for="result in searchResults" 
+          :key="result.id" 
+          @mousedown.prevent="selectResult(result)" 
+          class="result-item"
+        >
+          {{ result.name }}
+        </li>
+      </ul>
     </div>
 
     <Favorite msg="Welcome to Your Fav App"/>
     <Discover msg="Welcome to Discovery"/>
     <OwnShop msg="Welcome to your Shop"/>
-
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import Discover from '@/components/discover.vue'
+import Discover from '@/components/discover.vue';
 import Favorite from '@/components/favorite.vue';
 import OwnShop from '@/components/ownShop.vue';
 
@@ -35,50 +45,86 @@ export default {
   },
   data() {
     return {
-      searchQuery: "" // Variable pour stocker la saisie de l'utilisateur
+      searchQuery: "", // Texte saisi par l'utilisateur
+      searchResults: [], // Résultats de recherche
+      showResults: false, // Afficher ou non la liste déroulante
     };
   },
+  watch: {
+    searchQuery: {
+      handler(newQuery) {
+        if (newQuery.trim() !== "") {
+          this.searchShops(newQuery);
+        } else {
+          this.searchResults = []; // Réinitialise les résultats si le champ est vide
+        }
+      },
+      immediate: true, // Pour appliquer la logique dès le chargement
+    },
+  },
   methods: {
-    goToCompany() {
-      // Vérifie que la saisie de l'utilisateur n'est pas vide
-      if (this.searchQuery.trim() === "") {
-        alert("Veuillez entrer un ID ou un nom valide.");
-        return;
+    async searchShops(query) {
+      try {
+        const response = await fetch(`http://localhost:3000/api/shop/search?query=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error("Erreur lors de la récupération des données");
+        const results = await response.json();
+        this.searchResults = results.length > 0 ? results : []; // Réinitialise si aucune donnée
+      } catch (error) {
+        console.error("Erreur dans searchShops:", error);
+        this.searchResults = []; // Vide les résultats en cas d'erreur
       }
-
-      // Redirection vers la page correspondante (avec l'ID ou le nom)
-      this.$router.push(`/${this.searchQuery}`);
-    }
-  }
+    },
+    selectResult(result) {
+      this.searchQuery = result.name; // Met à jour l'input avec le nom sélectionné
+      this.showResults = false; // Ferme la liste déroulante
+      this.$router.push(`/shop/${result.id}`); // Redirige vers la page de l'entreprise
+    },
+    hideResults() {
+      // Utilise un délai pour que le clic sur un élément soit pris en compte avant de cacher les résultats
+      setTimeout(() => {
+        this.showResults = false;
+      }, 100);
+    },
+  },
 };
 </script>
 
 <style scoped>
 .search-container {
   margin: 20px 0;
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .search-input {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  flex-grow: 1;
   font-size: 16px;
 }
 
-.search-btn {
-  padding: 10px 20px;
-  background-color: #42b983;
-  color: white;
-  border: none;
+.results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
   border-radius: 5px;
+  margin-top: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.result-item {
+  padding: 10px;
   cursor: pointer;
 }
 
-.search-btn:hover {
-  background-color: #36996c;
+.result-item:hover {
+  background-color: #f0f0f0;
 }
 </style>
