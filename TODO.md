@@ -19,7 +19,7 @@
 tance, par mots clés des échoppes ou des produits, et de naviguer sur une échoppe locale de prox
 imité, de s’abonner à une échoppe pour être informé des changements dans les produits/services;
 
-[x/] la possibilité pour un client d’utiliser un lien pour accèder directement à l’échoppe
+[x] la possibilité pour un client d’utiliser un lien pour accèder directement à l’échoppe
 
 [ ] la possibilité pour un client de réserver un ensemble de produits/services sur une échoppe via un
  panier

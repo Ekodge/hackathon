@@ -15,6 +15,8 @@
 
     <Favorite msg="Welcome to Your Fav App"/>
     <Discover msg="Welcome to Discovery"/>
+    <OwnShop msg="Welcome to your Shop"/>
+
   </div>
 </template>
 
@@ -22,12 +24,14 @@
 // @ is an alias to /src
 import Discover from '@/components/discover.vue'
 import Favorite from '@/components/favorite.vue';
+import OwnShop from '@/components/ownShop.vue';
 
 export default {
   name: 'HomeView',
   components: {
     Favorite,
-    Discover
+    Discover,
+    OwnShop
   },
   data() {
     return {

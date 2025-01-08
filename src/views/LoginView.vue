@@ -3,7 +3,7 @@
       <h1>Connexion</h1>
       <form @submit.prevent="handleLogin">
         <div>
-          <label for="username">Nom d'utilisateur :</label>
+          <label for="username">Adresse e-mails :</label>
           <input id="username" v-model="username" type="text" required />
         </div>
         <div>
@@ -23,6 +23,7 @@
         username: "",
         password: "",
         errorMessage: "",
+        userId: null,
       };
     },
     methods: {
@@ -40,9 +41,11 @@
           });
 
           if (response.ok) {
-            //const data = await response.json();
+            const data = await response.json();
             localStorage.setItem("authenticated", "true");
             this.$router.push("/"); // Redirige vers la page principale
+            this.userId = data.userId;
+
           } else {
             const error = await response.json();
             this.errorMessage = error.message;
