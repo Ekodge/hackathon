@@ -20,20 +20,36 @@
   export default {
     data() {
       return {
-        username: '',
-        password: '',
-        errorMessage: '',
+        username: "",
+        password: "",
+        errorMessage: "",
       };
     },
     methods: {
-      handleLogin() {
-        // Vérifiez les identifiants (nom = "n", mot de passe = "p")
-        if (this.username === 'n' && this.password === 'p') {
-          // Stocker une variable indiquant que l'utilisateur est authentifié
-          localStorage.setItem('authenticated', 'true');
-          this.$router.push('/'); // Rediriger vers la page principale
-        } else {
-          this.errorMessage = 'Nom d\'utilisateur ou mot de passe incorrect.';
+      async handleLogin() {
+        try {
+          const response = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password,
+            }),
+          });
+
+          if (response.ok) {
+            //const data = await response.json();
+            localStorage.setItem("authenticated", "true");
+            this.$router.push("/"); // Redirige vers la page principale
+          } else {
+            const error = await response.json();
+            this.errorMessage = error.message;
+          }
+        } catch (err) {
+          console.error("Erreur lors de la connexion :", err);
+          this.errorMessage = "Une erreur s'est produite. Veuillez réessayer.";
         }
       },
     },
