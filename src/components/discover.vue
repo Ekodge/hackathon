@@ -143,9 +143,14 @@ export default {
   background: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
-  padding: 10px;
+  width: 40px; /* Largeur fixe */
+  height: 40px; /* Hauteur fixe identique */
   cursor: pointer;
   z-index: 10;
+  display: flex; /* Centre le contenu du bouton */
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px; /* Ajoute cette ligne pour empêcher les bords arrondis */
 }
 
 .carousel-btn.prev {

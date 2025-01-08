@@ -3,14 +3,16 @@ import HomeView from '../views/HomeView.vue';
 import AboutView from '../views/AboutView.vue';
 import MapPage from '../views/MapPage.vue';
 import LoginView from '../views/LoginView.vue';
-import DetailsView from '../views/DetailsView.vue'; // Import du composant pour les détails
+import DetailsView from '../views/DetailsView.vue'; 
+import EditShop from '../views/EditShop.vue';
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/', name: 'Home', component: HomeView },
   { path: '/about', name: 'About', component: AboutView },
   { path: '/map', name: 'Map', component: MapPage },
-  { path: '/:id_:name', name: 'Details', component: DetailsView }
+  { path: '/:id_:name', name: 'Details', component: DetailsView },
+  { path: '/edit-shop', name: 'EditShop', component: EditShop }
 ];
 
 const router = createRouter({

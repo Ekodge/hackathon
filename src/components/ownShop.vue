@@ -2,38 +2,61 @@
     <div class="own">
       <h1>{{ msg }}</h1>
   
+      <!-- Carousel si des items existent -->
       <div class="carousel-container" v-if="items.length">
         <div class="carousel-wrapper" ref="carousel">
-          <!-- Utilisation de router-link pour les éléments cliquables -->
-          <router-link
+          <!-- Cartes cliquables -->
+          <div
             v-for="(item, index) in items"
             :key="index"
-            :to="`/company/${item.id}/${encodeURIComponent(item.name)}`"
-            class="carousel-slide no-link"
+            class="carousel-slide"
           >
-            <table class="info-table">
-              <tbody>
-                <tr>
-                  <!-- Colonne gauche : Image -->
-                  <td class="image-cell">
-                    <img :src="require(`@/assets/logo.png`)" alt="Logo" class="carousel-image" />
-                  </td>
-                  <!-- Colonne droite : Informations -->
-                  <td class="info-cell">
-                    <p><strong>{{ item.name }}</strong></p>
-                    <p><strong>Adresse :</strong> <br />{{ item.address }}</p>
-                    <p><strong>Téléphone :</strong> <br />{{ item.phone }}</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </router-link>
+            <router-link
+              :to="`/company/${item.id}/${encodeURIComponent(item.name)}`"
+              class="carousel-link"
+            >
+              <div class="carousel-content">
+                <table class="info-table">
+                  <tbody>
+                    <tr>
+                      <!-- Image -->
+                      <td class="image-cell">
+                        <img
+                          :src="require(`@/assets/logo.png`)"
+                          alt="Logo"
+                          class="carousel-image"
+                        />
+                      </td>
+                      <!-- Texte -->
+                      <td class="info-cell">
+                        <p><strong>{{ item.name }}</strong></p>
+                        <p><strong>Adresse :</strong> <br />{{ item.address }}</p>
+                        <p><strong>Téléphone :</strong> <br />{{ item.phone }}</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </router-link>
+          </div>
         </div>
-        <!-- Boutons pour naviguer -->
+  
+        <!-- Boutons pour défiler -->
         <button class="carousel-btn prev" @click="scrollLeft">⬅</button>
         <button class="carousel-btn next" @click="scrollRight">➡</button>
       </div>
-      <p v-else>Chargement des données...</p>
+  
+      <!-- Message ou contenu par défaut si pas d'items -->
+      <div v-else>
+        <div class="default-card">
+          <img
+            :src="require(`@/assets/logo.png`)"
+            alt="Logo"
+            class="default-image"
+          />
+          <p class="default-text">Ajouter votre propre échoppe</p>
+        </div>
+      </div>
     </div>
   </template>
   
@@ -45,17 +68,18 @@
     },
     data() {
       return {
-        items: [], // Initialisé vide pour stocker les données de l'API
+        items: [], // Liste des données
       };
     },
     methods: {
       async fetchItems() {
         try {
-            const userId = localStorage.getItem("userId"); // Récupère l'userId
-            const response = await fetch(`http://localhost:3000/api/companies/owner/${userId}`);
-          if (!response.ok) {
+          const userId = localStorage.getItem("userId");
+          const response = await fetch(
+            `http://localhost:3000/api/companies/owner/${userId}`
+          );
+          if (!response.ok)
             throw new Error("Erreur lors de la récupération des données");
-          }
           this.items = await response.json();
         } catch (error) {
           console.error("Erreur : ", error.message);
@@ -63,32 +87,34 @@
       },
       scrollLeft() {
         const carousel = this.$refs.carousel;
-        const slideWidth = carousel.querySelector(".carousel-slide").offsetWidth + 10; // Inclut l'espacement
+        const slideWidth =
+          carousel.querySelector(".carousel-slide").offsetWidth + 20; // Inclut le gap
         carousel.scrollBy({ left: -slideWidth, behavior: "smooth" });
       },
       scrollRight() {
         const carousel = this.$refs.carousel;
-        const slideWidth = carousel.querySelector(".carousel-slide").offsetWidth + 10; // Inclut l'espacement
+        const slideWidth =
+          carousel.querySelector(".carousel-slide").offsetWidth + 20; // Inclut le gap
         carousel.scrollBy({ left: slideWidth, behavior: "smooth" });
       },
     },
     mounted() {
-      this.fetchItems(); // Appel à l'API lors du montage du composant
+      this.fetchItems(); // Charger les données
     },
   };
   </script>
   
-  <style scoped>
-  /* Styles inchangés */
+  <style>
   .carousel-container {
     position: relative;
     width: 100%;
     overflow: hidden;
+    margin-top: 20px;
   }
   
   .carousel-wrapper {
     display: flex;
-    gap: 20px;
+    gap: 20px; /* Espacement entre les cartes */
     overflow-x: auto;
     scroll-behavior: smooth;
   }
@@ -96,65 +122,100 @@
   .carousel-slide {
     display: flex;
     flex-shrink: 0;
-    width: 300px;
-    margin: 10px;
+    width: 300px; /* Largeur uniforme */
     background-color: #f9f9f9;
     border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer; /* Indique que la case est cliquable */
   }
   
-  .no-link {
-    text-decoration: none !important;
-    color: black !important;
+  .carousel-link {
+    display: block;
+    text-decoration: none; /* Supprime le style des liens */
+    color: inherit; /* Utilise la couleur par défaut */
+    width: 100%;
+    height: 100%;
+  }
+  
+  .carousel-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
   
   .info-table {
     width: 100%;
-    table-layout: fixed;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    border-collapse: separate;
-    background: #fff;
+    border-collapse: collapse;
   }
   
   .image-cell {
     width: 40%;
+    text-align: center;
+    vertical-align: middle;
   }
   
   .info-cell {
     width: 60%;
-    padding-left: 10px;
+    padding: 10px;
     vertical-align: top;
   }
   
-  .info-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-  }
-  
   .carousel-image {
-    width: 100%;
-    height: auto;
+    max-width: 80%;
+    margin: auto;
+    display: block;
     border-radius: 10px;
   }
   
   .carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    z-index: 10;
-  }
-  
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px; /* Largeur fixe */
+  height: 40px; /* Hauteur fixe identique */
+  cursor: pointer;
+  z-index: 10;
+  display: flex; /* Centre le contenu du bouton */
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px; /* Ajoute cette ligne pour empêcher les bords arrondis */
+}
   .carousel-btn.prev {
     left: 10px;
   }
   
   .carousel-btn.next {
     right: 10px;
+  }
+  
+  .default-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .default-image {
+    width: 80px;
+    height: auto;
+    margin-bottom: 10px;
+  }
+  
+  .default-text {
+    font-size: 16px;
+    color: #555;
   }
   </style>
   
