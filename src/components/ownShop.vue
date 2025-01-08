@@ -48,14 +48,14 @@
   
       <!-- Message ou contenu par défaut si pas d'items -->
       <div v-else>
-        <div class="default-card">
-          <img
-            :src="require(`@/assets/logo.png`)"
-            alt="Logo"
-            class="default-image"
-          />
-          <p class="default-text">Ajouter votre propre échoppe</p>
-        </div>
+        <a class="default-card no-link" href="/edit-shop">
+            <img
+              :src="require(`@/assets/logo.png`)"
+              alt="Logo"
+              class="default-image"
+            />
+            <p><strong>Ajouter votre propre échoppe</strong></p>
+        </a>
       </div>
     </div>
   </template>
@@ -74,11 +74,12 @@
     methods: {
       async fetchItems() {
         try {
-            const userId = localStorage.getItem("userId"); // Récupère l'userId
-            console.log(userId);
-            const response = await fetch(`http://localhost:3000/api/companies/owner/${userId}`);
+          const userId = localStorage.getItem("userId"); // Récupère l'userId
+          console.log(userId);
+          const response = await fetch(`http://localhost:3000/api/companies/owner/${userId}`);
           if (!response.ok) {
             throw new Error("Erreur lors de la récupération des données");
+          }
           this.items = await response.json();
         } catch (error) {
           console.error("Erreur : ", error.message);
@@ -103,7 +104,7 @@
   };
   </script>
   
-  <style>
+  <style scoped>
   .carousel-container {
     position: relative;
     width: 100%;
@@ -211,10 +212,10 @@
     height: auto;
     margin-bottom: 10px;
   }
-  
-  .default-text {
-    font-size: 16px;
-    color: #555;
+
+  .no-link {
+    text-decoration: none !important;
+    color: black !important;
   }
   </style>
   
