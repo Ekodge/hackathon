@@ -43,9 +43,8 @@
           if (response.ok) {
             const data = await response.json();
             localStorage.setItem("authenticated", "true");
+            localStorage.setItem("userId", data.userId);
             this.$router.push("/"); // Redirige vers la page principale
-            this.userId = data.userId;
-
           } else {
             const error = await response.json();
             this.errorMessage = error.message;

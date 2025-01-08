@@ -52,6 +52,7 @@
       async fetchItems() {
         try {
             const userId = localStorage.getItem("userId"); // Récupère l'userId
+            console.log(userId);
             const response = await fetch(`http://localhost:3000/api/companies/owner/${userId}`);
           if (!response.ok) {
             throw new Error("Erreur lors de la récupération des données");
