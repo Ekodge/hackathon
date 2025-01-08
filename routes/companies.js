@@ -30,6 +30,24 @@ const items = [
         phone: "03 21 43 65 87",
         owner: 3,
     },
+    {
+        id: 5,
+        name: "Entreprise E",
+        address: "Terre",
+        phone: "00 00 00 00 00",
+        owner: 3,
+    },
+];
+
+const favorites = [
+    {
+        userId: 1,
+        shopId: 1,
+    },
+    {
+        userId: 1,
+        shopId: 5,
+    },
 ];
 
 // Route pour obtenir toutes les entreprises
@@ -48,5 +66,25 @@ router.get("/companies/owner/:ownerId", (req, res) => {
         res.status(404).json({ message: "Aucune entreprise trouvée pour cet owner" }); // Si aucun résultat
     }
 });
+
+// Route pour obtenir les favoris d'un utilisateur spécifique
+router.get("/companies/favorites/:userId", (req, res) => {
+    const userId = parseInt(req.params.userId); // Récupère l'ID de l'utilisateur depuis l'URL
+
+    // Filtrer les favoris de cet utilisateur
+    const userFavorites = favorites.filter(fav => fav.userId === userId);
+
+    if (userFavorites.length > 0) {
+        // Récupérer les informations sur les entreprises correspondant aux favoris
+        const favoriteCompanies = userFavorites.map(fav => {
+            return items.find(item => item.id === fav.shopId); // Trouver chaque entreprise par son ID
+        });
+
+        res.json(favoriteCompanies); // Retourner les entreprises favorites
+    } else {
+        res.status(404).json({ message: "Aucun favori trouvé pour cet utilisateur" }); // Si aucun favori trouvé
+    }
+});
+
 
 module.exports = router;
