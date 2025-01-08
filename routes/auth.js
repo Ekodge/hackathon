@@ -4,26 +4,35 @@ const router = express.Router();
 const users = [
     {
         id: 1,
+        email: "a",
         username: "a",
         password: "a",
     },
     {
         id: 2,
+        email: "b",
         username: "b",
         password: "b",
     },
     {
         id: 3,
+        email: "c",
         username: "c",
         password: "c",
+    },
+    {
+        id: 4,
+        email: "d",
+        username: "d",
+        password: "d",
     },
 ];
 
 router.post("/login", (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     const user = users.find(
-        (u) => u.username === username && u.password === password
+        (u) => u.email === email && u.password === password
     );
 
     if (user) {
@@ -32,7 +41,7 @@ router.post("/login", (req, res) => {
             userId: user.id, // Ajout de l'ID de l'utilisateur dans la réponse
         });
     } else {
-        res.status(401).json({ message: "Nom d'utilisateur ou mot de passe incorrect" });
+        res.status(401).json({ message: "Email ou mot de passe incorrect" });
     }
 });
 
