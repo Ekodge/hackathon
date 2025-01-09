@@ -42,9 +42,10 @@ const clearOldLayers = () => {
 };
 
 // Fonction pour ajouter un marqueur
-const addMarker = (lon, lat, color = "orange") => {
+const addMarker = (lon, lat, color = "orange", shopId = null, type = "") => {
   const coordinates = fromLonLat([lon, lat]);
-  const markerStyle = new Style({
+
+  const defaultStyle = new Style({
     image: new CircleStyle({
       radius: 10,
       fill: new Fill({ color }),
@@ -52,12 +53,29 @@ const addMarker = (lon, lat, color = "orange") => {
     }),
   });
 
-  const markerFeature = new Feature({ geometry: new Point(coordinates) });
-  markerFeature.setStyle(markerStyle);
+  const hoverStyle = new Style({
+    image: new CircleStyle({
+      radius: 12, // Légèrement plus grand pour un effet visuel
+      fill: new Fill({ color: "yellow" }),
+      stroke: new Stroke({ color: "black", width: 2 }),
+    }),
+  });
+
+  const markerFeature = new Feature({
+    geometry: new Point(coordinates),
+    type, // Type de marqueur (ex. : shop, user, range)
+    shopId, // Associe l'ID du magasin pour l'interaction
+  });
+
+  markerFeature.setStyle(defaultStyle);
+  markerFeature.set("defaultStyle", defaultStyle);
+  markerFeature.set("hoverStyle", hoverStyle);
 
   const markerLayer = new VectorLayer({
     source: new VectorSource({ features: [markerFeature] }),
   });
+
+  markerLayer.setZIndex(2);
 
   mapInstance.value.addLayer(markerLayer);
   locationMarkersLayers.value.push(markerLayer);
@@ -75,6 +93,7 @@ const addRangeCircles = (lon, lat) => {
   ranges.forEach(({ radius, color }) => {
     const circleFeature = new Feature({
       geometry: new Circle(coordinates, radius),
+      type: "range",
     });
 
     const circleLayer = new VectorLayer({
@@ -84,6 +103,8 @@ const addRangeCircles = (lon, lat) => {
         stroke: new Stroke({ color, width: 1 }),
       }),
     });
+
+    circleLayer.setZIndex(1);
 
     mapInstance.value.addLayer(circleLayer);
     rangeCirclesLayers.value.push(circleLayer);
@@ -106,8 +127,8 @@ const getLocation = async () => {
     const lat = position.coords.latitude;
 
     clearOldLayers();
-    addMarker(lon, lat, "blue");
     addRangeCircles(lon, lat);
+    addMarker(lon, lat, "blue", null, "user");
 
     mapInstance.value.getView().setCenter(fromLonLat([lon, lat]));
     mapInstance.value.getView().setZoom(14);
@@ -158,6 +179,7 @@ const loadAndRecalculateShops = async () => {
     const position = await Geolocation.getCurrentPosition();
     const userLon = position.coords.longitude;
     const userLat = position.coords.latitude;
+    shops.value = [];
 
     const response = await fetch(`http://localhost:3000/api/shop/`);
     const data = await response.json();
@@ -189,7 +211,7 @@ const loadAndRecalculateShops = async () => {
       const distance = calculateDistance(userLat, userLon, shop.posY, shop.posX);
       if (distance <= shop.dist) {
         shops.value.push(shop);
-        addMarker(shop.posX, shop.posY, "orange");
+        addMarker(shop.posX, shop.posY, "orange", shop.id, "shop");
       }
     }
 
@@ -214,6 +236,49 @@ onMounted(() => {
       center: fromLonLat([-1.6778, 48.112]),
       zoom: 16,
     }),
+  });
+
+  // Gestion des clics sur les marqueurs
+  mapInstance.value.on("click", (event) => {
+    const clickedFeature = mapInstance.value.forEachFeatureAtPixel(
+      event.pixel,
+      (feature) => feature
+    );
+
+    if (clickedFeature && clickedFeature.get("type") === "shop") {
+      const shopId = clickedFeature.get("shopId");
+      if (shopId) {
+        window.location.href = `/shop/${shopId}`;
+      }
+    }
+  });
+
+  let lastHoveredFeature = null;
+
+  // Gestion globale du survol des marqueurs
+  mapInstance.value.on("pointermove", (event) => {
+    const hoveredFeature = mapInstance.value.forEachFeatureAtPixel(
+      event.pixel,
+      (feature) => feature
+    );
+
+    if (hoveredFeature && hoveredFeature.get("type") === "shop") {
+      if (lastHoveredFeature && lastHoveredFeature !== hoveredFeature) {
+        lastHoveredFeature.setStyle(lastHoveredFeature.get("defaultStyle"));
+      }
+      hoveredFeature.setStyle(hoveredFeature.get("hoverStyle"));
+      mapInstance.value.getTargetElement().style.cursor = "pointer";
+      lastHoveredFeature = hoveredFeature;
+    } else if (lastHoveredFeature) {
+      lastHoveredFeature.setStyle(lastHoveredFeature.get("defaultStyle"));
+      mapInstance.value.getTargetElement().style.cursor = "default";
+      lastHoveredFeature = null;
+    }
+
+    if (hoveredFeature) {
+      console.log("Hovered feature type:", hoveredFeature.get("type")); // Vérifiez les valeurs ici
+      console.log("Hovered feature shopId:", hoveredFeature.get("shopId"));
+    }
   });
 });
 </script>
