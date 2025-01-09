@@ -86,4 +86,54 @@ router.get("/shop/:id", async (req, res) => {
     }
 });
 
+// Route pour ajouter un nouveau shop
+router.post("/shop", async (req, res) => {
+    const { name, description, address, phone, owner } = req.body;
+
+    if (!name || !description || !address || !phone || !owner) {
+        return res.status(400).json({ error: "Tous les champs obligatoires doivent être renseignés." });
+    }
+
+    try {
+        const newShop = await pb.collection("shop").create({
+            name,
+            description,
+            address,
+            phone,
+            owner,
+        });
+        res.status(201).json(newShop);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de la création du shop." });
+    }
+});
+
+// Route pour éditer un shop existant
+router.put("/shop/:id", async (req, res) => {
+    const shopId = req.params.id;
+    const updates = req.body;
+
+    try {
+        const updatedShop = await pb.collection("shop").update(shopId, updates);
+        res.status(200).json(updatedShop);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du shop." });
+    }
+});
+
+// Route pour supprimer un shop
+router.delete("/shop/:id", async (req, res) => {
+    const shopId = req.params.id;
+
+    try {
+        await pb.collection("shop").delete(shopId);
+        res.status(200).json({ message: "Shop supprimé avec succès." });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de la suppression du shop." });
+    }
+});
+
 export default router;

@@ -3,25 +3,65 @@ const router = Router();
 
 import pb from "../server.js";
 
-const items = [
-    {
-        id: 1,
-        name: "Figurine de Shikanoko Nokonoko",
-        quantity: 123456789,
-        price: 123456789,
-        endDate: "31/12/2099",
-    },
-];
-
 // Route pour obtenir un item à partir de son ID
-router.get("/items/:id", (req, res) => {
-    const itemId = parseInt(req.params.id); // Récupérer l'ID de l'item depuis l'URL
-    const item = items.find((i) => i.id === itemId); // Rechercher l'item par ID
+router.get("/items/:id", async (req, res) => {
+    const itemId = req.params.id; // Récupérer l'ID de l'item depuis l'URL
 
-    if (item) {
+    try {
+        const item = await pb.collection("items").getOne(itemId); // Rechercher l'item dans PocketBase
         res.status(200).json(item); // Retourner l'item si trouvé
-    } else {
+    } catch (err) {
+        console.log(err);
         res.status(404).json({ message: "Item non trouvé" }); // Si aucun item trouvé
+    }
+});
+
+// Route pour ajouter un nouvel item
+router.post("/items", async (req, res) => {
+    const { name, quantity, price, endDate } = req.body;
+
+    if (!name || quantity == null || price == null || !endDate) {
+        return res.status(400).json({ error: "Tous les champs sont requis." });
+    }
+
+    try {
+        const newItem = await pb.collection("items").create({
+            name,
+            quantity,
+            price,
+            endDate,
+        });
+        res.status(201).json({ message: "Item ajouté avec succès.", item: newItem });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de l'ajout de l'item." });
+    }
+});
+
+// Route pour mettre à jour un item existant
+router.put("/items/:id", async (req, res) => {
+    const itemId = req.params.id;
+    const updates = req.body;
+
+    try {
+        const updatedItem = await pb.collection("items").update(itemId, updates);
+        res.status(200).json({ message: "Item mis à jour avec succès.", item: updatedItem });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de la mise à jour de l'item." });
+    }
+});
+
+// Route pour supprimer un item
+router.delete("/items/:id", async (req, res) => {
+    const itemId = req.params.id;
+
+    try {
+        await pb.collection("items").delete(itemId);
+        res.status(200).json({ message: "Item supprimé avec succès." });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Erreur lors de la suppression de l'item." });
     }
 });
 
