@@ -1,13 +1,10 @@
 <template>
   <div class="container">
     <div class="controls">
-      <!-- Formulaire pour saisir l'adresse -->
       <input v-model="address" @keyup.enter="searchAddress" placeholder="Entrez une adresse" />
-      <!-- Bouton pour la géolocalisation -->
       <button @click="getLocation">Obtenir ma position</button>
+      <button @click="loadAndRecalculateShops">Charger et recalculer les positions</button>
     </div>
-
-    <!-- La carte -->
     <div ref="map" class="map"></div>
   </div>
 </template>
@@ -31,40 +28,48 @@ import { Capacitor } from "@capacitor/core";
 
 const address = ref("");
 const map = ref(null);
-const mapInstance = ref(null); // Référence à l'instance de la carte
-const userMarkerLayer = ref(null); // Couche pour le marqueur de l'utilisateur
-const rangeCirclesLayers = ref([]); // Couches pour les cercles
-const locationMarkersLayers = ref([]); // Couches pour les marqueurs de lieux
+const mapInstance = ref(null);
+const locationMarkersLayers = ref([]);
+const rangeCirclesLayers = ref([]);
+const shops = ref([]);
 
-// Fonction pour supprimer toutes les couches liées (cercles et marqueurs)
+// Fonction pour supprimer toutes les couches liées (marqueurs et cercles)
 const clearOldLayers = () => {
-  // Supprimer la couche utilisateur
-  if (userMarkerLayer.value) {
-    mapInstance.value.removeLayer(userMarkerLayer.value);
-    userMarkerLayer.value = null;
-  }
-
-  // Supprimer les cercles
-  rangeCirclesLayers.value.forEach((circleLayer) => {
-    mapInstance.value.removeLayer(circleLayer);
-  });
-  rangeCirclesLayers.value = [];
-
-  // Supprimer les marqueurs des lieux
-  locationMarkersLayers.value.forEach((markerLayer) => {
-    mapInstance.value.removeLayer(markerLayer);
-  });
+  locationMarkersLayers.value.forEach((layer) => mapInstance.value.removeLayer(layer));
+  rangeCirclesLayers.value.forEach((layer) => mapInstance.value.removeLayer(layer));
   locationMarkersLayers.value = [];
+  rangeCirclesLayers.value = [];
 };
 
-// Fonction pour ajouter des cercles de portée
+// Fonction pour ajouter un marqueur
+const addMarker = (lon, lat, color = "orange") => {
+  const coordinates = fromLonLat([lon, lat]);
+  const markerStyle = new Style({
+    image: new CircleStyle({
+      radius: 10,
+      fill: new Fill({ color }),
+      stroke: new Stroke({ color: "black", width: 2 }),
+    }),
+  });
+
+  const markerFeature = new Feature({ geometry: new Point(coordinates) });
+  markerFeature.setStyle(markerStyle);
+
+  const markerLayer = new VectorLayer({
+    source: new VectorSource({ features: [markerFeature] }),
+  });
+
+  mapInstance.value.addLayer(markerLayer);
+  locationMarkersLayers.value.push(markerLayer);
+};
+
+// Fonction pour ajouter des cercles autour de la position de l'utilisateur
 const addRangeCircles = (lon, lat) => {
   const coordinates = fromLonLat([lon, lat]);
-
   const ranges = [
-    { radius: 5000, color: "rgba(0, 255, 0, 0.2)" }, // 5 km (vert)
-    { radius: 10000, color: "rgba(255, 165, 0, 0.2)" }, // 10 km (orange)
-    { radius: 20000, color: "rgba(255, 0, 0, 0.2)" }, // 20 km (rouge)
+    { radius: 5000, color: "rgba(0, 255, 0, 0.2)" }, // 5 km
+    { radius: 10000, color: "rgba(255, 165, 0, 0.2)" }, // 10 km
+    { radius: 20000, color: "rgba(255, 0, 0, 0.2)" }, // 20 km
   ];
 
   ranges.forEach(({ radius, color }) => {
@@ -73,71 +78,26 @@ const addRangeCircles = (lon, lat) => {
     });
 
     const circleLayer = new VectorLayer({
-      source: new VectorSource({
-        features: [circleFeature],
-      }),
+      source: new VectorSource({ features: [circleFeature] }),
       style: new Style({
         fill: new Fill({ color }),
         stroke: new Stroke({ color, width: 1 }),
       }),
     });
 
-    // Ajouter le cercle à la carte
     mapInstance.value.addLayer(circleLayer);
-    rangeCirclesLayers.value.push(circleLayer); // Stocker dans la liste
+    rangeCirclesLayers.value.push(circleLayer);
   });
-};
-
-// Fonction pour mettre à jour la carte avec un nouveau marqueur
-const updateMap = (lon, lat, isUserLocation = false) => {
-  const coordinates = fromLonLat([lon, lat]);
-
-  const markerStyle = new Style({
-    image: new CircleStyle({
-      radius: isUserLocation ? 7 : 10,
-      fill: new Fill({ color: isUserLocation ? "blue" : "orange" }),
-      stroke: new Stroke({ color: "black", width: 2 }),
-    }),
-  });
-
-  const markerFeature = new Feature({
-    geometry: new Point(coordinates),
-  });
-  markerFeature.setStyle(markerStyle);
-
-  const markerLayer = new VectorLayer({
-    source: new VectorSource({
-      features: [markerFeature],
-    }),
-  });
-
-  // Ajouter le marqueur à la carte
-  mapInstance.value.addLayer(markerLayer);
-
-  if (isUserLocation) {
-    clearOldLayers(); // Supprimer toutes les anciennes couches
-    userMarkerLayer.value = markerLayer;
-    addRangeCircles(lon, lat); // Ajouter les cercles autour de l'utilisateur
-  } else {
-    locationMarkersLayers.value.push(markerLayer); // Ajouter aux marqueurs de lieux
-  }
-
-  // Centrer la carte sur la position
-  mapInstance.value.getView().setCenter(coordinates);
-  mapInstance.value.getView().setZoom(16);
 };
 
 // Fonction pour obtenir la position actuelle
 const getLocation = async () => {
   try {
-    if (
-      Capacitor.getPlatform() === "android" ||
-      Capacitor.getPlatform() === "ios"
-    ) {
+    if (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios") {
       const { granted } = await Geolocation.requestPermissions();
       if (!granted) {
-        // alert("L'autorisation de géolocalisation est requise.");
-        // return;
+        alert("L'autorisation de géolocalisation est requise.");
+        return;
       }
     }
 
@@ -145,7 +105,12 @@ const getLocation = async () => {
     const lon = position.coords.longitude;
     const lat = position.coords.latitude;
 
-    updateMap(lon, lat, true); // Ajouter la position utilisateur
+    clearOldLayers();
+    addMarker(lon, lat, "blue");
+    addRangeCircles(lon, lat);
+
+    mapInstance.value.getView().setCenter(fromLonLat([lon, lat]));
+    mapInstance.value.getView().setZoom(14);
   } catch (error) {
     console.error("Erreur de géolocalisation", error);
     alert("Impossible de récupérer votre position.");
@@ -164,7 +129,8 @@ const searchAddress = async () => {
       const lon = parseFloat(data[0].lon);
       const lat = parseFloat(data[0].lat);
 
-      updateMap(lon, lat, false); // Ajouter le marqueur pour l'adresse
+      clearOldLayers();
+      addMarker(lon, lat);
     } else {
       alert("Adresse non trouvée.");
     }
@@ -173,8 +139,68 @@ const searchAddress = async () => {
   }
 };
 
+// Fonction pour calculer la distance entre deux points
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Fonction pour charger les shops et recalculer les positions
+const loadAndRecalculateShops = async () => {
+  try {
+    const position = await Geolocation.getCurrentPosition();
+    const userLon = position.coords.longitude;
+    const userLat = position.coords.latitude;
+
+    const response = await fetch(`http://localhost:3000/api/shop/`);
+    const data = await response.json();
+
+    for (const shop of data) {
+      if (!shop.posCalcule) {
+        try {
+          const geoResponse = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${shop.address}`
+          );
+          const geoData = await geoResponse.json();
+
+          if (geoData.length > 0) {
+            shop.posX = parseFloat(geoData[0].lon);
+            shop.posY = parseFloat(geoData[0].lat);
+            shop.posCalcule = true;
+
+            await fetch(`http://localhost:3000/api/shop/${shop.id}/update`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ posX: shop.posX, posY: shop.posY, posCalcule: true }),
+            });
+          }
+        } catch (error) {
+          console.error(`Erreur lors du recalcul des coordonnées pour ${shop.name}`, error);
+        }
+      }
+
+      const distance = calculateDistance(userLat, userLon, shop.posY, shop.posX);
+      if (distance <= shop.dist) {
+        shops.value.push(shop);
+        addMarker(shop.posX, shop.posY, "orange");
+      }
+    }
+
+    console.log("Magasins filtrés :", shops.value);
+  } catch (error) {
+    console.error("Erreur lors du chargement des magasins", error);
+    alert("Impossible de charger les magasins.");
+  }
+};
+
 onMounted(() => {
-  // Initialiser la carte
   mapInstance.value = new OlMap({
     target: map.value,
     layers: [
@@ -185,7 +211,7 @@ onMounted(() => {
       }),
     ],
     view: new View({
-      center: fromLonLat([-1.6778, 48.112]), // Rennes
+      center: fromLonLat([-1.6778, 48.112]),
       zoom: 16,
     }),
   });
@@ -203,12 +229,10 @@ onMounted(() => {
   padding: 10px;
   background-color: #f9f9f9;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1;
 }
 
 .map {
   flex: 1;
-  /* La carte occupe tout l'espace restant */
   width: 100%;
 }
 </style>

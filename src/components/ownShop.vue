@@ -39,6 +39,10 @@
               </div>
             </router-link>
           </div>
+          <a class="default-card no-link" href="/edit-shop">
+
+            <p><strong>Ajouter votre propre échoppe</strong></p>
+        </a>
         </div>
   
         <!-- Boutons pour défiler -->
