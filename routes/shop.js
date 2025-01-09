@@ -11,6 +11,9 @@ const shops = [
         posY: "0.0",
         phone: "01 23 45 67 89",
         owner: 1,
+        dist:1,
+        posCalcule: False
+
     },
     {
         id: 2,
@@ -21,6 +24,9 @@ const shops = [
         posY: "0.0",
         phone: "04 56 78 90 12",
         owner: 1,
+        dist:6,
+        posCalcule: False
+
     },
     {
         id: 3,
@@ -31,6 +37,8 @@ const shops = [
         posY: "0.0",
         phone: "03 21 43 65 87",
         owner: 2,
+        dist:19,
+        posCalcule: False
     },
     {
         id: 4,
@@ -41,6 +49,9 @@ const shops = [
         posY: "0.0",
         phone: "03 21 43 65 87",
         owner: 3,
+        dist:21,
+        posCalcule: False
+
     },
     {
         id: 5,
@@ -51,6 +62,8 @@ const shops = [
         posY: "0.0",
         phone: "00 00 00 00 00",
         owner: 3,
+        dist:10000,
+        posCalcule: False
     },
 ];
 
