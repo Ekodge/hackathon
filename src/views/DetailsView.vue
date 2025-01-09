@@ -2,13 +2,19 @@
   <div>
     <h1>Détails de l'entreprise</h1>
 
-    <!-- Affichage des données de l'entreprise -->
+    <!-- Affichage des données de l'entreprise si shop est chargé -->
     <div v-if="shop">
       <p><strong>ID :</strong> {{ shop.id }}</p>
       <p><strong>Nom :</strong> {{ shop.name }}</p>
       <p><strong>Description :</strong> {{ shop.description }}</p>
       <p><strong>Adresse :</strong> {{ shop.address }}</p>
       <p><strong>Téléphone :</strong> {{ shop.phone }}</p>
+      <p><strong>Distance :</strong> {{ shop.dist }} km</p>
+
+      <!-- Affichage de l'image du shop -->
+      <div v-if="shop.image">
+        <img :src="shop.image" alt="Image du shop" class="shop-image" />
+      </div>
 
       <!-- Bouton pour copier le lien -->
       <button @click="copyLink" class="copy-btn">Copier le lien</button>
@@ -20,6 +26,32 @@
 
     <!-- Message de chargement (uniquement si aucune erreur ou données) -->
     <p v-else>Chargement des informations...</p>
+
+    <!-- Affichage des items à vendre -->
+    <div v-if="shop && shop.items && shop.items.length > 0">
+      <h3>Items à vendre</h3>
+      <div class="item-header">
+        <span>Nom</span>
+        <span class="price">Prix (€)</span>
+        <span class="quantity">Quantité</span>
+        <span>Image</span>
+        <span>Date de fin d'offre</span>
+      </div>
+      <div v-for="(item, index) in shop.items" :key="index" class="item-row">
+        <span>{{ item.name }}</span>
+        <span class="price">{{ item.price }} €</span>
+        <span class="quantity">{{ item.quantity }}</span>
+        <div v-if="item.image">
+          <img :src="item.image" alt="Image de l'item" class="item-image" />
+        </div>
+        <span>{{ item.endDate }}</span>
+      </div>
+    </div>
+
+    <!-- Message si aucun item n'est trouvé -->
+    <p v-else-if="shop && shop.items && shop.items.length === 0">
+      Aucun item à vendre pour cette entreprise.
+    </p>
   </div>
 </template>
 
@@ -99,5 +131,50 @@ h1 {
   color: red;
   margin-top: 10px;
   font-size: 14px;
+}
+
+.shop-image {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.item-header {
+  display: flex;
+  gap: 10px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: left;
+  padding: 0 10px;
+}
+
+.item-header span {
+  flex: 1;
+  text-align: left;
+  padding: 0 8px;
+}
+
+.item-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 10px;
+}
+
+.item-row span {
+  flex: 1;
+  padding: 8px;
+}
+
+.item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.price, .quantity {
+  flex: 0.5;
 }
 </style>
