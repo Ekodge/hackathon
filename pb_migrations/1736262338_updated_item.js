@@ -4,7 +4,7 @@ migrate((app) => {
 
   // add field
   collection.fields.addAt(6, new Field({
-    "cascadeDelete": false,
+    "cascadeDelete": true,
     "collectionId": "pbc_2338794258",
     "hidden": false,
     "id": "relation3751219772",
@@ -12,7 +12,7 @@ migrate((app) => {
     "minSelect": 0,
     "name": "idShop",
     "presentable": false,
-    "required": false,
+    "required": true,
     "system": false,
     "type": "relation"
   }))

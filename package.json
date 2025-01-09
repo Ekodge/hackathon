@@ -1,7 +1,30 @@
 {
+  "scripts": {
+    "test": "jest --config babel.config.cjs"
+  },
   "type": "module",
   "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-jest": "^29.7.0",
     "dotenv": "^16.4.7",
+    "fs-extra": "^11.2.0",
+    "node": "^23.5.0",
     "pocketbase": "^0.25.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "jsx",
+      "node"
+    ],
+    "testEnvironment": "node"
   }
 }
