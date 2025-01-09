@@ -1,18 +1,31 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const authRoutes = require("./routes/auth");
-const shopRoutes = require("./routes/shop");
+import PocketBase from "pocketbase";
+import creds from "./credsSelf.json" assert { type: "json" };
+
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import authRoutes from "./routes/auth.js";
+import itemRoutes from "./routes/item.js";
+import shopRoutes from "./routes/shop.js";
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
+const pb = new PocketBase("http://127.0.0.1:8090");
+
+await pb.collection('_superusers').authWithPassword(creds.mail, creds.pass, {
+    autoRefreshThreshold: 30 * 60 // Auto refresh en cas de token expiré
+});
+
+export default pb;
+
+// Middleware généraux
 app.use(cors());
 app.use(bodyParser.json());
 
 // Utilisation des routes
 app.use("/api", authRoutes);  // Authentification
+app.use("/api", itemRoutes);  // Produits
 app.use("/api", shopRoutes);  // Échoppe
 
 // Démarrer le serveur

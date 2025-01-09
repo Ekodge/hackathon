@@ -1,5 +1,7 @@
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
+const router = Router();
+
+import pb from "../server.js";
 
 const items = [
     {
@@ -23,4 +25,4 @@ router.get("/items/:id", (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
