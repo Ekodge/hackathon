@@ -162,8 +162,10 @@ export default {
     },
     
     editShop() {
-      this.$router.push({ name: "EditShop", params: { shopId: this.shop.id } });
+      localStorage.setItem("shopData", JSON.stringify(this.shop)); // Stockez les données dans localStorage
+      this.$router.push({ name: "EditShop" }); // Naviguez vers la page d'édition
     },
+
   },
 };
 </script>

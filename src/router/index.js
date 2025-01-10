@@ -14,7 +14,7 @@ const routes = [
   { path: '/about', name: 'About', component: AboutView },
   { path: '/map', name: 'Map', component: MapPage },
   { path: '/shop/:id', name: 'Details', component: DetailsView },
-  { path: '/edit-shop', name: 'EditShop', component: EditShop, props: route => ({ shopData: route.params.shopData })},
+  { path: '/edit-shop', name: 'EditShop', component: EditShop,  props: (route) => ({ shopData: route.params.shopData })},
   { path: '/new-shop', name: 'NewShop', component: NewShop }
 
 ];

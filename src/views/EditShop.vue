@@ -80,6 +80,7 @@
 
 <script>
 export default {
+  name:"EditShop",
   props: {
     shopData: {
       type: Object,
@@ -100,11 +101,15 @@ export default {
     };
   },
   mounted() {
-    // Initialiser les données du formulaire avec les données du shop passé via les props
-    if (this.shopData) {
-      this.form = JSON.parse(JSON.stringify(this.shopData)); // Copier les données pour éviter toute modification directe
-    }
-  },
+  const savedShopData = localStorage.getItem("shopData");
+  if (savedShopData) {
+    this.form = JSON.parse(savedShopData); // Chargez les données dans le formulaire
+    localStorage.removeItem("shopData"); // Supprimez les données après les avoir utilisées
+  } else {
+    console.error("shopData est manquant !");
+  }
+},
+
   methods: {
     async submitForm() {
       try {
