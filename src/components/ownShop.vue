@@ -39,7 +39,7 @@
               </div>
             </router-link>
           </div>
-          <a class="default-card no-link" href="/edit-shop">
+          <a class="default-card no-link" href="/new-shop">
 
             <p><strong>Ajouter votre propre échoppe</strong></p>
         </a>
@@ -52,7 +52,7 @@
   
       <!-- Message ou contenu par défaut si pas d'items -->
       <div v-else>
-        <a class="default-card no-link" href="/edit-shop">
+        <a class="default-card no-link" href="/new-shop">
             <img
               :src="require(`@/assets/logo.png`)"
               alt="Logo"

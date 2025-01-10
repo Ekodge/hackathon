@@ -160,6 +160,10 @@ export default {
       // Réinitialiser la quantité d'ajout pour cet item
       item.addToCartQuantity = 1;
     },
+    
+    editShop() {
+      this.$router.push({ name: "EditShop", params: { shopId: this.shop.id } });
+    },
   },
 };
 </script>

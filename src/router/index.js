@@ -5,6 +5,8 @@ import MapPage from '../views/MapPage.vue';
 import LoginView from '../views/LoginView.vue';
 import DetailsView from '../views/DetailsView.vue';
 import EditShop from '../views/EditShop.vue';
+import NewShop from '../views/NewShop.vue';
+
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -12,7 +14,9 @@ const routes = [
   { path: '/about', name: 'About', component: AboutView },
   { path: '/map', name: 'Map', component: MapPage },
   { path: '/shop/:id', name: 'Details', component: DetailsView },
-  { path: '/edit-shop', name: 'EditShop', component: EditShop }
+  { path: '/edit-shop', name: 'EditShop', component: EditShop, props: route => ({ shopData: route.params.shopData })},
+  { path: '/new-shop', name: 'NewShop', component: NewShop }
+
 ];
 
 const router = createRouter({
