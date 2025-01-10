@@ -3,6 +3,48 @@ const router = Router();
 
 import pb from "../server.js";
 
+// Méthode pour mettre à jour un shop
+async function changeShop(shopId, updateData) {
+    try {
+        const shop = await pb.collection("shop").getOne(shopId);
+        const updatedData = { ...shop, ...updateData };
+
+        // Mise à jour des followers
+        if (updateData["followers+"]) {
+            updatedData.followers = [...(shop.followers || []), updateData["followers+"]];
+        } else if (updateData["followers-"]) {
+            updatedData.followers = (shop.followers || []).filter((id) => id !== updateData["followers-"]);
+        }
+
+        await pb.collection("shop").update(shopId, updatedData);
+    } catch (err) {
+        console.error("Erreur lors de la mise à jour du shop:", err);
+        throw new Error("Erreur lors de la mise à jour du shop.");
+    }
+}
+
+// Méthode pour mettre à jour un utilisateur
+async function updateUser(userId, updateData) {
+    try {
+        const user = await pb.collection("user").getOne(userId);
+        const updatedData = { ...user, ...updateData };
+
+        // Mise à jour des shops suivis
+        if (updateData["followedShop+"]) {
+            updatedData.followedShops = [...(user.followedShops || []), updateData["followedShop+"]];
+        } else if (updateData["followedShop-"]) {
+            updatedData.followedShops = (user.followedShops || []).filter((id) => id !== updateData["followedShop-"]);
+        }
+
+        await pb.collection("user").update(userId, updatedData);
+    } catch (err) {
+        console.error("Erreur lors de la mise à jour de l'utilisateur:", err);
+        throw new Error("Erreur lors de la mise à jour de l'utilisateur.");
+    }
+}
+
+
+
 // Route pour obtenir toutes les entreprises
 router.get("/shop", async (req, res) => {
     try {
@@ -90,7 +132,7 @@ router.get("/shop/:id", async (req, res) => {
 router.post("/shop", async (req, res) => {
     const { name, description, address, phone, owner } = req.body;
 
-    if (!name || !description || !address || !phone || !owner) {
+    if (!name || !description || !address || !phone || !owner || !items || !dist || !posX || !posY) {
         return res.status(400).json({ error: "Tous les champs obligatoires doivent être renseignés." });
     }
 
@@ -98,9 +140,14 @@ router.post("/shop", async (req, res) => {
         const newShop = await pb.collection("shop").create({
             name,
             description,
+            posX,
+            posY,
             address,
+            images,
             phone,
             owner,
+            dist,
+            items
         });
         res.status(201).json(newShop);
     } catch (err) {
@@ -133,6 +180,42 @@ router.delete("/shop/:id", async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Erreur lors de la suppression du shop." });
+    }
+});
+
+// Route pour suivre un shop
+router.post("/shop/follow", async (req, res) => {
+    const { userId, shopId } = req.body;
+
+    if (!userId || !shopId) {
+        return res.status(400).json({ error: "Les champs userId et shopId sont requis." });
+    }
+
+    try {
+        await changeShop(shopId, { "followers+": userId });
+        await updateUser(userId, { "followedShop+": shopId });
+        res.status(200).json({ message: "Shop suivi avec succès." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors du suivi du shop." });
+    }
+});
+
+// Route pour ne plus suivre un shop
+router.post("/shop/unfollow", async (req, res) => {
+    const { userId, shopId } = req.body;
+
+    if (!userId || !shopId) {
+        return res.status(400).json({ error: "Les champs userId et shopId sont requis." });
+    }
+
+    try {
+        await changeShop(shopId, { "followers-": userId });
+        await updateUser(userId, { "followedShop-": shopId });
+        res.status(200).json({ message: "Shop désuivi avec succès." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors du désuivi du shop." });
     }
 });
 

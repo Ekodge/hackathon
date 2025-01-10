@@ -8,7 +8,7 @@ router.get("/item/:id", async (req, res) => {
     const itemId = req.params.id; // Récupérer l'ID de l'item depuis l'URL
 
     try {
-        const item = await pb.collection("items").getOne(itemId); // Rechercher l'item dans PocketBase
+        const item = await pb.collection("item").getOne(itemId); // Rechercher l'item dans PocketBase
         res.status(200).json(item); // Retourner l'item si trouvé
     } catch (err) {
         console.log(err);
@@ -25,7 +25,7 @@ router.post("/item", async (req, res) => {
     }
 
     try {
-        const newItem = await pb.collection("items").create({
+        const newItem = await pb.collection("item").create({
             name,
             quantity,
             price,
@@ -44,7 +44,7 @@ router.put("/item/:id", async (req, res) => {
     const updates = req.body;
 
     try {
-        const updatedItem = await pb.collection("items").update(itemId, updates);
+        const updatedItem = await pb.collection("item").update(itemId, updates);
         res.status(200).json({ message: "Item mis à jour avec succès.", item: updatedItem });
     } catch (err) {
         console.log(err);
@@ -57,7 +57,7 @@ router.delete("/item/:id", async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        await pb.collection("items").delete(itemId);
+        await pb.collection("item").delete(itemId);
         res.status(200).json({ message: "Item supprimé avec succès." });
     } catch (err) {
         console.log(err);
