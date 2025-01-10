@@ -1,0 +1,84 @@
+#
+# Project specific excludes
+#
+
+tomcat
+
+#
+# Default excludes
+#
+
+# Binaries
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.war
+*.ear
+*.sar
+*.class
+
+# Maven 
+target/
+
+# IntelliJ project files 
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# eclipse project file
+.settings/
+.classpath
+.project
+
+# NetBeans specific
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+
+# OS
+.DS_Store
+
+# Misc
+*.swp
+release.properties
+pom.xml.releaseBackup
+pom.xml.tag
+/bin/
+/.gitignore
+
+# Pocketbase
+pb_data/
+pocketbase
+
+# VSCode-specific
+.vscode/             # VSCode workspace settings
+.history/            # VSCode extension (e.g., Local History plugin)
+
+# Node.js / JavaScript
+node_modules/        # Dependencies for Node.js projects
+npm-debug.log*       # Logs from npm
+yarn-error.log       # Logs from Yarn
+pnpm-debug.log*      # Logs from pnpm
+.env                 # Environment variables
+coverage/            # Coverage reports for testing (e.g., Jest, NYC)
+dist/                # Distribution folder for builds
+out/                 # Output folders (general build artifacts)
+
+# Logs
+*.log                # Log files (general)
+logs/                # Logs folder
+
+# System-specific
+Thumbs.db            # Windows
+ehthumbs.db          # Windows
