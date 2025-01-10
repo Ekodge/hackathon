@@ -35,6 +35,8 @@
 import Discover from '@/components/discover.vue';
 import Favorite from '@/components/favorite.vue';
 import OwnShop from '@/components/ownShop.vue';
+// import { login } from '../../baas/src/services/auth';
+
 
 export default {
   name: 'HomeView',

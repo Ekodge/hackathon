@@ -79,6 +79,8 @@
   </template>
   
   <script>
+// import { hello } from '../../baas/src/services/auth.cjs';
+
   export default {
     props: {
       shopData: {
@@ -159,6 +161,10 @@
       },
     },
   };
+
+  // hello()
+  
+
   </script>
   
   <style scoped>
