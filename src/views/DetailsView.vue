@@ -76,6 +76,30 @@
           {{ cartItem.name }} - {{ cartItem.quantity }} à {{ cartItem.price }} € chacune
         </li>
       </ul>
+
+      <!-- Bouton pour valider le panier -->
+      <div v-if="cart.length > 0">
+  <h3>Votre Panier</h3>
+  <ul>
+    <li v-for="(cartItem, index) in cart" :key="index">
+      {{ cartItem.name }} - 
+      <input
+        type="number"
+        v-model.number="cartItem.quantity"
+        min="1"
+        @change="updateCartQuantity(cartItem.id, cartItem.quantity)"
+      />
+      à {{ cartItem.price }} € chacune
+      <button @click="deleteCartItem(cartItem.id)" class="delete-cart-btn">
+        Supprimer
+      </button>
+    </li>
+  </ul>
+
+  <!-- Bouton pour valider le panier -->
+  <button @click="validateCart" class="validate-cart-btn">Valider le panier</button>
+</div>
+
     </div>
   </div>
   <!-- Bouton pour modifier le shop si c'est le shop du user -->
@@ -92,145 +116,163 @@ export default {
       shop: null,
       copySuccess: false,
       errorMessage: null,
-      cart: [], // Panier vide au départ
+      cart: [], // Panier local initialisé à vide
+      userId: localStorage.getItem("userId"), // Récupérer l'ID de l'utilisateur connecté
     };
   },
   mounted() {
-    this.fetchShopDetails(); // Appelle la méthode pour récupérer les détails de l'entreprise
-  },
-  computed: {
-    isUserShop() {
-      // Vérifie si le shop appartient à l'utilisateur connecté
-      const userId = localStorage.getItem("userId");
-      return this.shop && this.shop.owner == userId;
-    },
+    this.fetchShopDetails(); // Récupère les détails de l'entreprise
+    this.fetchCart(); // Récupère les items du panier pour l'utilisateur
   },
   methods: {
     fetchShopDetails() {
-      const shopId = this.$route.params.id; // Récupère l'ID depuis l'URL
-      fetch(`http://localhost:3000/api/shop/${shopId}`) // Remplacez l'URL par celle de votre API
+      const shopId = this.$route.params.id; // Récupère l'ID du shop depuis l'URL
+      fetch(`http://localhost:3000/api/shop/${shopId}`) // Appel à l'API pour les détails du shop
         .then((response) => {
-          if (!response.ok) {
-            throw new Error("Aucune entreprise trouvée avec cet ID.");
-          }
+          if (!response.ok) throw new Error("Aucune entreprise trouvée avec cet ID.");
           return response.json();
         })
         .then((data) => {
-          this.shop = data; // Met à jour les données de l'entreprise
-          console.log(this.shop);
+          this.shop = data;
         })
         .catch((error) => {
-          this.errorMessage = error.message; // Affiche le message d'erreur
+          this.errorMessage = error.message;
         });
     },
-
-    copyLink() {
-      const url = window.location.href;
-      navigator.clipboard
-        .writeText(url)
-        .then(() => {
-          this.copySuccess = true;
-          setTimeout(() => {
-            this.copySuccess = false;
-          }, 2000);
+    fetchCart() {
+      // Récupérer les items du panier pour l'utilisateur connecté
+      fetch(`http://localhost:3000/api/cart/${this.userId}`)
+        .then((response) => {
+          if (!response.ok) throw new Error("Erreur lors de la récupération du panier.");
+          return response.json();
         })
-        .catch(() => {
-          alert("Échec de la copie du lien. Veuillez réessayer.");
+        .then((data) => {
+          this.cart = data.map((cartItem) => ({
+            id: cartItem.id,
+            name: cartItem.itemName, // Nom de l'article (si disponible dans la réponse)
+            price: cartItem.itemPrice, // Prix de l'article (si disponible dans la réponse)
+            quantity: cartItem.quantity,
+            itemId: cartItem.itemId,
+          }));
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la récupération du panier :", error);
         });
     },
-
-    // Ajouter l'item au panier
     addToCart(item) {
-      if (item.addToCartQuantity <= 0 || item.addToCartQuantity > item.quantity) {
+      const quantity = item.addToCartQuantity;
+      if (quantity <= 0 || quantity > item.quantity) {
         alert("Veuillez entrer une quantité valide !");
         return;
       }
 
-      // Vérifier si l'item est déjà dans le panier
-      const cartItem = this.cart.find((cartItem) => cartItem.id === item.id);
-      if (cartItem) {
-        cartItem.quantity += item.addToCartQuantity; // Si l'item est déjà dans le panier, on met à jour la quantité
-      } else {
-        this.cart.push({ ...item, quantity: item.addToCartQuantity }); // Sinon on l'ajoute
-      }
-
-      // Mettre à jour la quantité restante dans le shop
-      item.quantity -= item.addToCartQuantity;
-
-      // Réinitialiser la quantité d'ajout pour cet item
-      item.addToCartQuantity = 1;
+      // Envoyer la requête pour ajouter un article au panier
+      fetch(`http://localhost:3000/api/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: this.userId,
+          itemId: item.id,
+          quantity,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Erreur lors de l'ajout au panier.");
+          return response.json();
+        })
+        .then(() => {
+          alert("Article ajouté au panier avec succès !");
+          this.fetchCart(); // Rafraîchir le panier local
+        })
+        .catch((error) => {
+          console.error("Erreur lors de l'ajout au panier :", error);
+        });
     },
-    
-    editShop() {
-      localStorage.setItem("shopData", JSON.stringify(this.shop)); // Stockez les données dans localStorage
-      this.$router.push({ name: "EditShop" }); // Naviguez vers la page d'édition
+    updateCartQuantity(cartItemId, newQuantity) {
+      // Mettre à jour la quantité d'un article dans le panier
+      fetch(`http://localhost:3000/api/cart/${cartItemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: newQuantity }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Erreur lors de la mise à jour du panier.");
+          return response.json();
+        })
+        .then(() => {
+          this.fetchCart(); // Rafraîchir le panier local
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la mise à jour du panier :", error);
+        });
     },
-
+    deleteCartItem(cartItemId) {
+      // Supprimer un article du panier
+      fetch(`http://localhost:3000/api/cart/${cartItemId}`, {
+        method: "DELETE",
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Erreur lors de la suppression de l'article.");
+          return response.json();
+        })
+        .then(() => {
+          this.fetchCart(); // Rafraîchir le panier local
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la suppression de l'article :", error);
+        });
+    },
+    validateCart() {
+      // Simuler une validation du panier
+      alert("Votre panier a été validé !");
+      this.cart = []; // Réinitialiser le panier local
+    },
   },
 };
 </script>
 
+
+
 <style scoped>
-.item-header {
-  display: flex;
-  gap: 10px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  align-items: center; /* Assurer un alignement vertical cohérent */
-}
-
-.item-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: center; /* Alignement vertical des éléments */
-}
-
-.item-header span,
-.item-row span{
-  flex: 1;
-  text-align: left;
-  padding: 0 8px;
-}
-
-.item-row button {
-  flex: 1;
-}
-
-.item-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  padding: 0 8px;
-}
-
-.text-image {
-  max-width: 50px;
-}
-
-.quantity-input {
-  flex: 1;
-  text-align: left;
-  margin: 0 8px;
-  max-width: 60px; /* Spécifier une largeur pour le champ quantité */
-}
-
-.text-quantity {
-  max-width: 60px;
-}
-
-.add-to-cart-btn {
+.validate-cart-btn {
   background-color: #42b983;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  padding: 5px 10px;
+  padding: 10px 15px;
+  margin-top: 10px;
 }
 
-.add-to-cart-btn:hover {
+.validate-cart-btn:hover {
   background-color: #36996c;
 }
 
+.delete-cart-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
 
+.delete-cart-btn:hover {
+  background-color: #c0392b;
+}
+
+.validate-cart-btn {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 15px;
+  margin-top: 10px;
+}
+
+.validate-cart-btn:hover {
+  background-color: #36996c;
+}
 </style>
