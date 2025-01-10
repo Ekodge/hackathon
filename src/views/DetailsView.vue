@@ -78,10 +78,10 @@
       </ul>
     </div>
   </div>
-        <!-- Bouton pour modifier le shop si c'est le shop du user -->
-        <div v-if="isUserShop">
-        <button @click="editShop" class="edit-shop-btn">Modifier ce shop</button>
-      </div>
+  <!-- Bouton pour modifier le shop si c'est le shop du user -->
+  <div v-if="isUserShop">
+    <button @click="editShop" class="edit-shop-btn">Modifier ce shop</button>
+  </div>
 </template>
 
 <script>
@@ -89,51 +89,41 @@ export default {
   name: "DetailsView",
   data() {
     return {
-      shop: {
-        id: 1,
-        name: "Boutique Test",
-        description: "Une boutique de test pour afficher des items.",
-        address: "123 Rue Test, Paris, France",
-        phone: "0123456789",
-        dist: 5, // Distance en kilomètres
-        image: "https://via.placeholder.com/200",
-        owner:1,
-        items: [
-          {
-            id: 1,
-            name: "Figurine de Shikanoko Nokonoko",
-            quantity: 123456789,
-            price: 123456789,
-            endDate: "31/12/2099",
-            image: "https://via.placeholder.com/100",
-            addToCartQuantity: 1, // Quantité par défaut
-          },
-          {
-            id: 2,
-            name: "T-Shirt Cool Design",
-            quantity: 150,
-            price: 19.99,
-            endDate: "31/12/2025",
-            image: "https://via.placeholder.com/100",
-            addToCartQuantity: 1, // Quantité par défaut
-          },
-          {
-            id: 3,
-            name: "Casque Audio Bluetooth",
-            quantity: 50,
-            price: 89.99,
-            endDate: "31/12/2024",
-            image: "https://via.placeholder.com/100",
-            addToCartQuantity: 1, // Quantité par défaut
-          },
-        ],
-      },
+      shop: null,
       copySuccess: false,
       errorMessage: null,
       cart: [], // Panier vide au départ
     };
   },
+  mounted() {
+    this.fetchShopDetails(); // Appelle la méthode pour récupérer les détails de l'entreprise
+  },
+  computed: {
+    isUserShop() {
+      // Vérifie si le shop appartient à l'utilisateur connecté
+      const userId = localStorage.getItem("userId");
+      return this.shop && this.shop.owner == userId;
+    },
+  },
   methods: {
+    fetchShopDetails() {
+      const shopId = this.$route.params.id; // Récupère l'ID depuis l'URL
+      fetch(`http://localhost:3000/api/shop/${shopId}`) // Remplacez l'URL par celle de votre API
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Aucune entreprise trouvée avec cet ID.");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          this.shop = data; // Met à jour les données de l'entreprise
+          console.log(this.shop);
+        })
+        .catch((error) => {
+          this.errorMessage = error.message; // Affiche le message d'erreur
+        });
+    },
+
     copyLink() {
       const url = window.location.href;
       navigator.clipboard
