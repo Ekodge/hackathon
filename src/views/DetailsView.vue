@@ -2,7 +2,7 @@
   <div>
     <h1>Détails de l'entreprise</h1>
 
-    <!-- Affichage des données de l'entreprise si shop est chargé -->
+    <!-- Affichage des données de l'entreprise -->
     <div v-if="shop">
       <p><strong>ID :</strong> {{ shop.id }}</p>
       <p><strong>Nom :</strong> {{ shop.name }}</p>
@@ -34,9 +34,13 @@
         <span>Nom</span>
         <span class="price">Prix (€)</span>
         <span class="quantity">Quantité</span>
-        <span>Image</span>
+        <span class="text-image">Image</span>
         <span>Date de fin d'offre</span>
+        <span class="text-quantity">quantité</span>
+        <span>Action</span>
       </div>
+
+      <!-- Affichage des items avec le bouton d'ajout au panier -->
       <div v-for="(item, index) in shop.items" :key="index" class="item-row">
         <span>{{ item.name }}</span>
         <span class="price">{{ item.price }} €</span>
@@ -45,6 +49,17 @@
           <img :src="item.image" alt="Image de l'item" class="item-image" />
         </div>
         <span>{{ item.endDate }}</span>
+        
+        <!-- Input pour la quantité à ajouter au panier -->
+        <input
+          v-model.number="item.addToCartQuantity"
+          type="number"
+          :max="item.quantity"
+          min="1"
+          placeholder="Quantité"
+          class="quantity-input"
+        />
+        <button @click="addToCart(item)" class="add-to-cart-btn">Ajouter au panier</button>
       </div>
     </div>
 
@@ -52,7 +67,21 @@
     <p v-else-if="shop && shop.items && shop.items.length === 0">
       Aucun item à vendre pour cette entreprise.
     </p>
+
+    <!-- Affichage du panier -->
+    <div v-if="cart.length > 0">
+      <h3>Votre Panier</h3>
+      <ul>
+        <li v-for="(cartItem, index) in cart" :key="index">
+          {{ cartItem.name }} - {{ cartItem.quantity }} à {{ cartItem.price }} € chacune
+        </li>
+      </ul>
+    </div>
   </div>
+        <!-- Bouton pour modifier le shop si c'est le shop du user -->
+        <div v-if="isUserShop">
+        <button @click="editShop" class="edit-shop-btn">Modifier ce shop</button>
+      </div>
 </template>
 
 <script>
@@ -60,121 +89,152 @@ export default {
   name: "DetailsView",
   data() {
     return {
-      shop: null, // Les données de l'entreprise
-      copySuccess: false, // Pour afficher le message de succès
-      errorMessage: null, // Message d'erreur en cas de problème
+      shop: {
+        id: 1,
+        name: "Boutique Test",
+        description: "Une boutique de test pour afficher des items.",
+        address: "123 Rue Test, Paris, France",
+        phone: "0123456789",
+        dist: 5, // Distance en kilomètres
+        image: "https://via.placeholder.com/200",
+        owner:1,
+        items: [
+          {
+            id: 1,
+            name: "Figurine de Shikanoko Nokonoko",
+            quantity: 123456789,
+            price: 123456789,
+            endDate: "31/12/2099",
+            image: "https://via.placeholder.com/100",
+            addToCartQuantity: 1, // Quantité par défaut
+          },
+          {
+            id: 2,
+            name: "T-Shirt Cool Design",
+            quantity: 150,
+            price: 19.99,
+            endDate: "31/12/2025",
+            image: "https://via.placeholder.com/100",
+            addToCartQuantity: 1, // Quantité par défaut
+          },
+          {
+            id: 3,
+            name: "Casque Audio Bluetooth",
+            quantity: 50,
+            price: 89.99,
+            endDate: "31/12/2024",
+            image: "https://via.placeholder.com/100",
+            addToCartQuantity: 1, // Quantité par défaut
+          },
+        ],
+      },
+      copySuccess: false,
+      errorMessage: null,
+      cart: [], // Panier vide au départ
     };
   },
-  mounted() {
-    this.fetchShopDetails(); // Appelle la méthode pour récupérer les détails de l'entreprise
-  },
   methods: {
-    fetchShopDetails() {
-      const shopId = this.$route.params.id; // Récupère l'ID depuis l'URL
-      fetch(`http://localhost:3000/api/shop/${shopId}`) // Remplacez l'URL par celle de votre API
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Aucune entreprise trouvée avec cet ID.");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          this.shop = data; // Met à jour les données de l'entreprise
-        })
-        .catch((error) => {
-          this.errorMessage = error.message; // Affiche le message d'erreur
-        });
-    },
     copyLink() {
-      const url = window.location.href; // Obtient l'URL actuelle
+      const url = window.location.href;
       navigator.clipboard
-        .writeText(url) // Copie l'URL dans le presse-papiers
+        .writeText(url)
         .then(() => {
-          this.copySuccess = true; // Affiche le message de succès
+          this.copySuccess = true;
           setTimeout(() => {
-            this.copySuccess = false; // Masque le message après 2 secondes
+            this.copySuccess = false;
           }, 2000);
         })
         .catch(() => {
-          alert("Échec de la copie du lien. Veuillez réessayer."); // Gestion des erreurs
+          alert("Échec de la copie du lien. Veuillez réessayer.");
         });
+    },
+
+    // Ajouter l'item au panier
+    addToCart(item) {
+      if (item.addToCartQuantity <= 0 || item.addToCartQuantity > item.quantity) {
+        alert("Veuillez entrer une quantité valide !");
+        return;
+      }
+
+      // Vérifier si l'item est déjà dans le panier
+      const cartItem = this.cart.find((cartItem) => cartItem.id === item.id);
+      if (cartItem) {
+        cartItem.quantity += item.addToCartQuantity; // Si l'item est déjà dans le panier, on met à jour la quantité
+      } else {
+        this.cart.push({ ...item, quantity: item.addToCartQuantity }); // Sinon on l'ajoute
+      }
+
+      // Mettre à jour la quantité restante dans le shop
+      item.quantity -= item.addToCartQuantity;
+
+      // Réinitialiser la quantité d'ajout pour cet item
+      item.addToCartQuantity = 1;
     },
   },
 };
 </script>
 
 <style scoped>
-h1 {
-  margin-bottom: 20px;
-}
-
-.copy-btn {
-  background-color: #42b983;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.copy-btn:hover {
-  background-color: #36996c;
-}
-
-.success-msg {
-  color: #42b983;
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.error-msg {
-  color: red;
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.shop-image {
-  width: 100%;
-  max-width: 300px;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-
 .item-header {
   display: flex;
   gap: 10px;
   font-weight: bold;
   margin-bottom: 10px;
-  text-align: left;
-  padding: 0 10px;
-}
-
-.item-header span {
-  flex: 1;
-  text-align: left;
-  padding: 0 8px;
+  align-items: center; /* Assurer un alignement vertical cohérent */
 }
 
 .item-row {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
-  padding: 0 10px;
+  align-items: center; /* Alignement vertical des éléments */
 }
 
-.item-row span {
+.item-header span,
+.item-row span{
   flex: 1;
-  padding: 8px;
+  text-align: left;
+  padding: 0 8px;
+}
+
+.item-row button {
+  flex: 1;
 }
 
 .item-image {
   width: 50px;
   height: 50px;
   object-fit: cover;
-  border-radius: 8px;
+  padding: 0 8px;
 }
 
-.price, .quantity {
-  flex: 0.5;
+.text-image {
+  max-width: 50px;
 }
+
+.quantity-input {
+  flex: 1;
+  text-align: left;
+  margin: 0 8px;
+  max-width: 60px; /* Spécifier une largeur pour le champ quantité */
+}
+
+.text-quantity {
+  max-width: 60px;
+}
+
+.add-to-cart-btn {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #36996c;
+}
+
+
 </style>

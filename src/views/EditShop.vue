@@ -1,6 +1,6 @@
 <template>
   <div class="Edit">
-    <h1>Remplir les informations de l'entreprise</h1>
+    <h1>Modifier les informations de l'entreprise</h1>
     <form @submit.prevent="submitForm">
       <div class="detail-short">
         <label for="name">Nom</label>
@@ -27,43 +27,49 @@
         <input type="file" id="image" @change="handleImageUpload" />
       </div>
       <div>
-        <label>Liste des items à vendre</label> <br>
+        <label>Liste des items à vendre</label> <br />
         <div v-if="form.items.length > 0" class="item-header">
           <span>Nom</span>
           <span class="price">Prix (€)</span>
           <span class="quantity">Quantité</span>
-          <span>image</span>
+          <span>Image</span>
           <span>Date de fin d'offre</span>
           <span class="action">Action</span>
         </div>
         <div v-for="(item, index) in form.items" :key="index" class="item-row">
-          <input 
-            type="text" 
-            v-model="item.name" 
-            placeholder="Nom de l'item" 
+          <input
+            type="text"
+            v-model="item.name"
+            placeholder="Nom de l'item"
             required
           />
           <input
             class="price"
-            type="number" 
-            v-model.number="item.price" 
-            placeholder="Prix de l'item" 
+            type="number"
+            v-model.number="item.price"
+            placeholder="Prix de l'item"
             required
           />
           <input
-            class="price"
-            type="number" 
-            v-model.number="item.quantity" 
-            placeholder="Quantité" 
+            class="quantity"
+            type="number"
+            v-model.number="item.quantity"
+            placeholder="Quantité"
             required
           />
-          <input type="file" id="image" @change="handleImageUpload" />
-          <input 
-            type="date" 
-            v-model="item.endDate" 
-            placeholder="Date de fin d'offre" 
+          <input type="file" @change="handleImageUploadForItem(index, $event)" />
+          <input
+            type="date"
+            v-model="item.endDate"
+            placeholder="Date de fin d'offre"
           />
-          <button type="button" class="action" @click="removeItem(index)">Supprimer</button>
+          <button
+            type="button"
+            class="action"
+            @click="removeItem(index)"
+          >
+            Supprimer
+          </button>
         </div>
         <button type="button" @click="addItem">Ajouter un item</button>
       </div>
@@ -74,12 +80,30 @@
 
 <script>
 export default {
+  props: {
+    shopData: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       form: {
-        items: []
+        name: "",
+        description: "",
+        address: "",
+        phone: "",
+        dist: 0,
+        image: null,
+        items: [],
       },
     };
+  },
+  mounted() {
+    // Initialiser les données du formulaire avec les données du shop passé via les props
+    if (this.shopData) {
+      this.form = JSON.parse(JSON.stringify(this.shopData)); // Copier les données pour éviter toute modification directe
+    }
   },
   methods: {
     async submitForm() {
@@ -104,16 +128,8 @@ export default {
         console.error("Erreur lors du géocodage:", error);
       }
 
-      // Mettre à jour les dates de fin par défaut si elles ne sont pas fournies
-      this.form.items.forEach(item => {
-        if (!item.endDate) {
-          const today = new Date();
-          const defaultEndDate = new Date(today.setDate(today.getDate() + 30));
-          item.endDate = defaultEndDate.toISOString().split('T')[0];
-        }
-      });
-
-      console.log("Données du formulaire :", this.form);
+      console.log("Données modifiées :", this.form);
+      // Vous pouvez ici envoyer `this.form` à une API pour sauvegarder les modifications
     },
     handleImageUpload(event) {
       const file = event.target.files[0];
@@ -122,8 +138,21 @@ export default {
         console.log("Image uploadée :", file.name);
       }
     },
+    handleImageUploadForItem(index, event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.form.items[index].image = file;
+        console.log(`Image pour l'item ${index} uploadée :`, file.name);
+      }
+    },
     addItem() {
-      this.form.items.push({ name: "", price: 0, quantity: 1, endDate: null });
+      this.form.items.push({
+        name: "",
+        price: 0,
+        quantity: 1,
+        endDate: null,
+        image: null,
+      });
     },
     removeItem(index) {
       this.form.items.splice(index, 1);
