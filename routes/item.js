@@ -4,7 +4,7 @@ const router = Router();
 import pb from "../server.js";
 
 // Route pour obtenir un item à partir de son ID
-router.get("/items/:id", async (req, res) => {
+router.get("/item/:id", async (req, res) => {
     const itemId = req.params.id; // Récupérer l'ID de l'item depuis l'URL
 
     try {
@@ -17,7 +17,7 @@ router.get("/items/:id", async (req, res) => {
 });
 
 // Route pour ajouter un nouvel item
-router.post("/items", async (req, res) => {
+router.post("/item", async (req, res) => {
     const { name, quantity, price, endDate } = req.body;
 
     if (!name || quantity == null || price == null || !endDate) {
@@ -39,7 +39,7 @@ router.post("/items", async (req, res) => {
 });
 
 // Route pour mettre à jour un item existant
-router.put("/items/:id", async (req, res) => {
+router.put("/item/:id", async (req, res) => {
     const itemId = req.params.id;
     const updates = req.body;
 
@@ -53,7 +53,7 @@ router.put("/items/:id", async (req, res) => {
 });
 
 // Route pour supprimer un item
-router.delete("/items/:id", async (req, res) => {
+router.delete("/item/:id", async (req, res) => {
     const itemId = req.params.id;
 
     try {
