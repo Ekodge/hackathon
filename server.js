@@ -5,6 +5,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
+import cartRoutes from "./routes/cart.js";
 import itemRoutes from "./routes/item.js";
 import shopRoutes from "./routes/shop.js";
 
@@ -25,6 +26,7 @@ app.use(bodyParser.json());
 
 // Utilisation des routes
 app.use("/api", authRoutes);  // Authentification
+app.use("/api", cartRoutes);  // Panier
 app.use("/api", itemRoutes);  // Produits
 app.use("/api", shopRoutes);  // Échoppe
 
