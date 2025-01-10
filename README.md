@@ -1,5 +1,5 @@
 # hackathon
-réseaux de proxémie
+réseaux de proxémies
 
 
 # Documentation pocketbase
