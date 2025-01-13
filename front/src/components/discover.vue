@@ -33,7 +33,10 @@
       <button class="carousel-btn prev" @click="scrollLeft">⬅</button>
       <button class="carousel-btn next" @click="scrollRight">➡</button>
     </div>
-    <p v-else>Chargement des données...</p>
+
+    <!-- Message de chargement uniquement si les items sont vides et en cours de récupération -->
+    <p v-if="loading && items.length === 0">Chargement des données...</p>
+    <p v-else-if="!loading && items.length === 0">Aucun élément trouvé.</p>
   </div>
 </template>
 
@@ -45,7 +48,8 @@ export default {
   },
   data() {
     return {
-      items: [], // Initialisé vide pour stocker les données de l'API
+      items: [],  // Initialisé vide pour stocker les données de l'API
+      loading: true,  // Indicateur de chargement
     };
   },
   methods: {
@@ -58,6 +62,8 @@ export default {
         this.items = await response.json();
       } catch (error) {
         console.error("Erreur : ", error.message);
+      } finally {
+        this.loading = false;  // Le chargement est terminé
       }
     },
     scrollLeft() {
