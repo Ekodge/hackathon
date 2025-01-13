@@ -21,7 +21,6 @@
 </template>
 
 <script>
-import { login, logout, getUserInfo } from '../../baas/src/services/auth.cjs';
 
 export default {
   data() {
@@ -34,23 +33,32 @@ export default {
   methods: {
     async handleLogin() {
       try {
-        const isLoggedIn = await login(this.email, this.password);
-        console.log(isLoggedIn)
-        console.log(this.email)
-        console.log(this.password)
+        // Envoyer une requête POST à l'API de connexion
+        const response = await fetch("http://localhost:3000/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: this.email,
+            password: this.password,
+          }),
+        });
 
-        if (isLoggedIn) {
-          const userInfo = getUserInfo();
-          console.log("Utilisateur connecté :", userInfo);
+        // Vérifier si la réponse est OK
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Utilisateur connecté :", data);
 
           // Stocker les infos utilisateur dans localStorage si nécessaire
           localStorage.setItem("authenticated", "true");
-          localStorage.setItem("userId", userInfo.id);
+          localStorage.setItem("userId", data.userId);
 
           // Redirection vers la page principale
           this.$router.push("/");
         } else {
-          this.errorMessage = "Adresse e-mail ou mot de passe incorrect.";
+          const errorData = await response.json();
+          this.errorMessage = errorData.message || "Adresse e-mail ou mot de passe incorrect.";
         }
       } catch (err) {
         console.error("Erreur lors de la connexion :", err);
@@ -58,7 +66,6 @@ export default {
       }
     },
     handleLogout() {
-      logout();
       localStorage.removeItem("authenticated");
       localStorage.removeItem("userId");
       console.log("Utilisateur déconnecté");

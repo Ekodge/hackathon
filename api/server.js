@@ -1,6 +1,3 @@
-import PocketBase from "pocketbase";
-import creds from "./credsSelf.json" assert { type: "json" };
-
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -9,18 +6,15 @@ import cartRoutes from "./routes/cart.js";
 import itemRoutes from "./routes/item.js";
 import shopRoutes from "./routes/shop.js";
 
+import { createClient } from '@supabase/supabase-js'
+
+// Create a single supabase client for interacting with your database
+const supabase = createClient('https://yhzyfgirndllvyklvobd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloenlmZ2lybmRsbHZ5a2x2b2JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3NTk4NzcsImV4cCI6MjA1MjMzNTg3N30.DVhL1QGjoOGnPCfLOrTtlV8mwNsgGLDMI8a7_55mxMs')
+
 const app = express();
 const PORT = 3000;
 
-const pb = new PocketBase("http://127.0.0.1:8090");
-
-await pb.collection('_superusers').authWithPassword(creds.mail, creds.pass, {
-    autoRefreshThreshold: 30 * 60 // Auto refresh en cas de token expiré
-});
-
-pb.autoCancellation(false);
-
-export default pb;
+export default supabase;
 
 // Middleware généraux
 app.use(cors());

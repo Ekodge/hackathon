@@ -1,26 +1,18 @@
 import { Router } from "express";
 const router = Router();
 
-import supabase from "../server.js";
+import pb from "../server.js";
 
 // Route pour obtenir le panier d'un utilisateur
 router.get("/cart/:userId", async (req, res) => {
     const userId = req.params.userId; // Récupérer l'ID de l'utilisateur depuis l'URL
 
     try {
-        const { data: cart, error } = await supabase
-            .from("cart")
-            .select("*")
-            .eq("idUser", userId);
-
-        if (error) {
-            throw error;
-        }
-
+        const cart = await pb.collection("cart").getFullList({ filter: `userId="${userId}"` }); // Récupérer les items du panier
         res.status(200).json(cart); // Retourner les articles du panier
     } catch (err) {
-        console.error("Erreur lors de la récupération du panier :", err);
-        res.status(404).json({ message: "Panier non trouvé." });
+        console.log(err);
+        res.status(404).json({ message: "Panier non trouvé" }); // Si le panier n'existe pas
     }
 });
 
@@ -33,17 +25,14 @@ router.post("/cart", async (req, res) => {
     }
 
     try {
-        const { data: newCartItem, error } = await supabase
-            .from("cart")
-            .insert([{ idUser: userId, itemId, quantity }]);
-
-        if (error) {
-            throw error;
-        }
-
+        const newCartItem = await pb.collection("cart").create({
+            userId,
+            itemId,
+            quantity,
+        });
         res.status(201).json({ message: "Article ajouté au panier avec succès.", cartItem: newCartItem });
     } catch (err) {
-        console.error("Erreur lors de l'ajout de l'article au panier :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de l'ajout de l'article au panier." });
     }
 });
@@ -58,18 +47,10 @@ router.put("/cart/:cartItemId", async (req, res) => {
     }
 
     try {
-        const { data: updatedCartItem, error } = await supabase
-            .from("cart")
-            .update({ quantity })
-            .eq("id", cartItemId);
-
-        if (error) {
-            throw error;
-        }
-
+        const updatedCartItem = await pb.collection("cart").update(cartItemId, { quantity });
         res.status(200).json({ message: "Article mis à jour dans le panier.", cartItem: updatedCartItem });
     } catch (err) {
-        console.error("Erreur lors de la mise à jour de l'article dans le panier :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'article dans le panier." });
     }
 });
@@ -79,18 +60,10 @@ router.delete("/cart/:cartItemId", async (req, res) => {
     const cartItemId = req.params.cartItemId;
 
     try {
-        const { error } = await supabase
-            .from("cart")
-            .delete()
-            .eq("id", cartItemId);
-
-        if (error) {
-            throw error;
-        }
-
+        await pb.collection("cart").delete(cartItemId);
         res.status(200).json({ message: "Article supprimé du panier." });
     } catch (err) {
-        console.error("Erreur lors de la suppression de l'article du panier :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de la suppression de l'article du panier." });
     }
 });

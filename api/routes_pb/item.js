@@ -1,27 +1,18 @@
 import { Router } from "express";
 const router = Router();
 
-import supabase from "../server.js";
+import pb from "../server.js";
 
 // Route pour obtenir un item à partir de son ID
 router.get("/item/:id", async (req, res) => {
     const itemId = req.params.id; // Récupérer l'ID de l'item depuis l'URL
 
     try {
-        const { data: item, error } = await supabase
-            .from("item")
-            .select("*")
-            .eq("id", itemId)
-            .single(); // Obtenir un seul item
-
-        if (error) {
-            throw error;
-        }
-
+        const item = await pb.collection("item").getOne(itemId); // Rechercher l'item dans PocketBase
         res.status(200).json(item); // Retourner l'item si trouvé
     } catch (err) {
-        console.error("Erreur lors de la récupération de l'item :", err);
-        res.status(404).json({ message: "Item non trouvé." });
+        console.log(err);
+        res.status(404).json({ message: "Item non trouvé" }); // Si aucun item trouvé
     }
 });
 
@@ -34,17 +25,15 @@ router.post("/item", async (req, res) => {
     }
 
     try {
-        const { data: newItem, error } = await supabase
-            .from("item")
-            .insert([{ name, quantity, price, endDate }]);
-
-        if (error) {
-            throw error;
-        }
-
+        const newItem = await pb.collection("item").create({
+            name,
+            quantity,
+            price,
+            endDate,
+        });
         res.status(201).json({ message: "Item ajouté avec succès.", item: newItem });
     } catch (err) {
-        console.error("Erreur lors de l'ajout de l'item :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de l'ajout de l'item." });
     }
 });
@@ -55,18 +44,10 @@ router.put("/item/:id", async (req, res) => {
     const updates = req.body;
 
     try {
-        const { data: updatedItem, error } = await supabase
-            .from("item")
-            .update(updates)
-            .eq("id", itemId);
-
-        if (error) {
-            throw error;
-        }
-
+        const updatedItem = await pb.collection("item").update(itemId, updates);
         res.status(200).json({ message: "Item mis à jour avec succès.", item: updatedItem });
     } catch (err) {
-        console.error("Erreur lors de la mise à jour de l'item :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'item." });
     }
 });
@@ -76,18 +57,10 @@ router.delete("/item/:id", async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        const { error } = await supabase
-            .from("item")
-            .delete()
-            .eq("id", itemId);
-
-        if (error) {
-            throw error;
-        }
-
+        await pb.collection("item").delete(itemId);
         res.status(200).json({ message: "Item supprimé avec succès." });
     } catch (err) {
-        console.error("Erreur lors de la suppression de l'item :", err);
+        console.log(err);
         res.status(500).json({ error: "Erreur lors de la suppression de l'item." });
     }
 });

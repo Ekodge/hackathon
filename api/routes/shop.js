@@ -1,60 +1,20 @@
 import { Router } from "express";
 import multer from "multer";
+import supabase from "../server.js"; // Assurez-vous que le fichier server.js configure correctement Supabase
 
 const router = Router();
-const upload = multer({ dest: 'uploads/' });
-
-import pb from "../server.js";
-
-// Méthode pour mettre à jour un shop
-async function changeShop(shopId, updateData) {
-    try {
-        const shop = await pb.collection("shop").getOne(shopId);
-        const updatedData = { ...shop, ...updateData };
-
-        // Mise à jour des followers
-        if (updateData["followers+"]) {
-            updatedData.followers = [...(shop.followers || []), updateData["followers+"]];
-        } else if (updateData["followers-"]) {
-            updatedData.followers = (shop.followers || []).filter((id) => id !== updateData["followers-"]);
-        }
-
-        await pb.collection("shop").update(shopId, updatedData);
-    } catch (err) {
-        console.error("Erreur lors de la mise à jour du shop:", err);
-        throw new Error("Erreur lors de la mise à jour du shop.");
-    }
-}
-
-// Méthode pour mettre à jour un utilisateur
-async function updateUser(userId, updateData) {
-    try {
-        const user = await pb.collection("user").getOne(userId);
-        const updatedData = { ...user, ...updateData };
-
-        // Mise à jour des shops suivis
-        if (updateData["followedShop+"]) {
-            updatedData.followedShops = [...(user.followedShops || []), updateData["followedShop+"]];
-        } else if (updateData["followedShop-"]) {
-            updatedData.followedShops = (user.followedShops || []).filter((id) => id !== updateData["followedShop-"]);
-        }
-
-        await pb.collection("user").update(userId, updatedData);
-    } catch (err) {
-        console.error("Erreur lors de la mise à jour de l'utilisateur:", err);
-        throw new Error("Erreur lors de la mise à jour de l'utilisateur.");
-    }
-}
-
-
+const upload = multer({ dest: "uploads/" });
 
 // Route pour obtenir toutes les entreprises
 router.get("/shop", async (req, res) => {
     try {
-        const shops = await pb.collection("shop").getFullList();
-        res.json(shops); // Retourner toutes les entreprises
+        const { data: shops, error } = await supabase.from("shop").select("*");
+
+        if (error) throw error;
+
+        res.json(shops);
     } catch (err) {
-        console.log(err)
+        console.error(err);
         res.status(500).json({ error: "Erreur lors de la récupération des shops." });
     }
 });
@@ -63,9 +23,13 @@ router.get("/shop", async (req, res) => {
 router.get("/shop/owner/:ownerId", async (req, res) => {
     const ownerId = req.params.ownerId;
     try {
-        const shops = await pb.collection("shop").getFullList({
-            filter: `idUser = ${ownerId}`, // Filtrer par ID du propriétaire
-        });
+        const { data: shops, error } = await supabase
+            .from("shop")
+            .select("*")
+            .eq("idUser", ownerId);
+
+        if (error) throw error;
+
         if (shops.length > 0) {
             res.json(shops);
         } else {
@@ -80,14 +44,24 @@ router.get("/shop/owner/:ownerId", async (req, res) => {
 router.get("/shop/favorites/:userId", async (req, res) => {
     const userId = req.params.userId;
     try {
-        const favorites = await pb.collection("favorites").getFullList({
-            filter: `userId = ${userId}`, // Filtrer par ID utilisateur
-        });
+        const { data: favorites, error } = await supabase
+            .from("favorite")
+            .select("idShop")
+            .eq("idUser", userId);
+
+        if (error) throw error;
 
         if (favorites.length > 0) {
             const favoriteShops = [];
             for (const fav of favorites) {
-                const shop = await req.pb.collection("shop").getOne(fav.shopId);
+                const { data: shop, error: shopError } = await supabase
+                    .from("shop")
+                    .select("*")
+                    .eq("id", fav.idShop)
+                    .single();
+
+                if (shopError) throw shopError;
+
                 favoriteShops.push(shop);
             }
             res.json(favoriteShops);
@@ -107,9 +81,13 @@ router.get("/shop/search", async (req, res) => {
     }
 
     try {
-        const matchingShops = await pb.collection("shop").getFullList({
-            filter: `name ~ "${query}"`, // Rechercher par nom (insensible à la casse)
-        });
+        const { data: matchingShops, error } = await supabase
+            .from("shop")
+            .select("*")
+            .ilike("name", `%${query}%`); // Recherche insensible à la casse
+
+        if (error) throw error;
+
         if (matchingShops.length > 0) {
             res.status(200).json(matchingShops);
         } else {
@@ -124,7 +102,14 @@ router.get("/shop/search", async (req, res) => {
 router.get("/shop/:id", async (req, res) => {
     const shopId = req.params.id;
     try {
-        const shop = await pb.collection("shop").getOne(shopId);
+        const { data: shop, error } = await supabase
+            .from("shop")
+            .select("*")
+            .eq("id", shopId)
+            .single();
+
+        if (error) throw error;
+
         res.status(200).json(shop);
     } catch (err) {
         res.status(404).json({ message: "Aucun shop trouvé avec cet ID." });
@@ -132,58 +117,33 @@ router.get("/shop/:id", async (req, res) => {
 });
 
 // Route pour ajouter un nouveau shop
-router.post("/shop", upload.single('image'), async (req, res) => {
-    const { name, description, posX, posY, address, owner, dist } = req.body;
+router.post("/shop", upload.single("image"), async (req, res) => {
+    const { name, description, posX, posY, address, owner, dist, phone } = req.body;
 
     if (!name || !description || !posX || !posY || !address || !owner || !dist) {
         return res.status(400).json({ error: "Tous les champs obligatoires doivent être renseignés." });
     }
 
     try {
-        // Convertir posX et posY en nombres
-        const positionX = parseFloat(posX);
-        const positionY = parseFloat(posY);
+        const { data: newShop, error } = await supabase.from("shop").insert([
+            {
+                name,
+                description,
+                positionX: parseFloat(posX),
+                positionY: parseFloat(posY),
+                address,
+                idUser: owner,
+                dist,
+                phone
+            },
+        ]);
 
-        const newShop = await pb.collection("shop").create({
-            name,
-            description,
-            positionX,
-            positionY,
-            address,
-            idUser: owner,
-            dist,
-        });
+        if (error) throw error;
+
         res.status(201).json(newShop);
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({ error: "Erreur lors de la création du shop." });
-    }
-});
-
-// Route pour éditer un shop existant
-router.put("/shop/:id", async (req, res) => {
-    const shopId = req.params.id;
-    const updates = req.body;
-
-    try {
-        const updatedShop = await pb.collection("shop").update(shopId, updates);
-        res.status(200).json(updatedShop);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Erreur lors de la mise à jour du shop." });
-    }
-});
-
-// Route pour supprimer un shop
-router.delete("/shop/:id", async (req, res) => {
-    const shopId = req.params.id;
-
-    try {
-        await pb.collection("shop").delete(shopId);
-        res.status(200).json({ message: "Shop supprimé avec succès." });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Erreur lors de la suppression du shop." });
     }
 });
 
@@ -196,12 +156,33 @@ router.post("/shop/follow", async (req, res) => {
     }
 
     try {
-        await changeShop(shopId, { "followers+": userId });
-        await updateUser(userId, { "followedShop+": shopId });
-        res.status(200).json({ message: "Shop suivi avec succès." });
+        // Vérifier si le couple existe déjà
+        const { data: existingFavorite, error: fetchError } = await supabase
+            .from("favorite")
+            .select("*")
+            .eq("userId", userId)
+            .eq("shopId", shopId)
+            .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+            throw fetchError;
+        }
+
+        if (existingFavorite) {
+            return res.status(400).json({ message: "Ce shop est déjà suivi par cet utilisateur." });
+        }
+
+        // Ajouter le couple userId et shopId dans la table favorite
+        const { error: insertError } = await supabase
+            .from("favorite")
+            .insert([{ userId, shopId }]);
+
+        if (insertError) throw insertError;
+
+        res.status(200).json({ message: "Shop ajouté aux favoris avec succès." });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors du suivi du shop." });
+        res.status(500).json({ error: "Erreur lors de l'ajout du shop aux favoris." });
     }
 });
 
@@ -214,13 +195,20 @@ router.post("/shop/unfollow", async (req, res) => {
     }
 
     try {
-        await changeShop(shopId, { "followers-": userId });
-        await updateUser(userId, { "followedShop-": shopId });
-        res.status(200).json({ message: "Shop désuivi avec succès." });
+        // Supprimer le couple userId et shopId de la table favorite
+        const { error: deleteError } = await supabase
+            .from("favorite")
+            .delete()
+            .match({ userId, shopId });
+
+        if (deleteError) throw deleteError;
+
+        res.status(200).json({ message: "Shop retiré des favoris avec succès." });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors du désuivi du shop." });
+        res.status(500).json({ error: "Erreur lors de la suppression du shop des favoris." });
     }
 });
+
 
 export default router;
