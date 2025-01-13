@@ -105,4 +105,31 @@ router.delete("/user/:id", async (req, res) => {
     }
 });
 
+// Route pour obtenir un utilisateur par ID
+router.get("/user/:id", async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const { data, error } = await supabase
+            .from("user")
+            .select("*")
+            .eq("id", userId)
+            .single(); // Ensures a single user is returned
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data) {
+            return res.status(404).json({ error: "Utilisateur non trouvé." });
+        }
+
+        res.status(200).json(data);
+    } catch (err) {
+        console.error("Erreur lors de la récupération de l'utilisateur :", err);
+        res.status(500).json({ error: "Erreur lors de la récupération de l'utilisateur." });
+    }
+});
+
+
 export default router;
