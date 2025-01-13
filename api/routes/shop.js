@@ -122,21 +122,34 @@ router.get("/shop/search", async (req, res) => {
     }
 });
 
-// Route pour obtenir un shop par son ID
+// Route pour obtenir un shop par son ID avec les items associés
 router.get("/shop/:id", async (req, res) => {
     const shopId = req.params.id;
     try {
-        const { data: shop, error } = await supabase
+        // Récupérer les informations du shop
+        const { data: shop, error: shopError } = await supabase
             .from("shop")
             .select("*")
             .eq("id", shopId)
-            .single();
+            .single(); // On veut un seul shop par ID
 
-        if (error) throw error;
+        if (shopError) throw shopError;
 
-        res.status(200).json(shop);
+        // Récupérer les items associés au shop en utilisant le champ idShop dans la table item
+        const { data: items, error: itemsError } = await supabase
+            .from("item")
+            .select("*")
+            .eq("idShop", shopId); // On filtre directement par idShop
+
+        if (itemsError) throw itemsError;
+
+        // Ajouter les items au shop
+        shop.items = items;
+
+        res.status(200).json(shop); // Retourner le shop avec ses items
     } catch (err) {
-        res.status(404).json({ message: "Aucun shop trouvé avec cet ID." });
+        console.error("Erreur lors de la récupération du shop ou des items :", err);
+        res.status(404).json({ message: "Aucun shop trouvé avec cet ID ou erreur lors de récupération des items." });
     }
 });
 

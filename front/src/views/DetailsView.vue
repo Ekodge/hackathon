@@ -140,7 +140,6 @@ export default {
       this.shop && this.shop.idUser == this.userId;
     },
     editShop() {
-      this.shop.items = [];
       localStorage.setItem("shopData", JSON.stringify(this.shop)); // Stockez les données dans localStorage
       this.$router.push({ name: "EditShop" }); // Naviguez vers la page d'édition
     },
