@@ -1,5 +1,8 @@
 import { Router } from "express";
+import multer from "multer";
+
 const router = Router();
+const upload = multer({ dest: 'uploads/' });
 
 import pb from "../server.js";
 
@@ -61,7 +64,7 @@ router.get("/shop/owner/:ownerId", async (req, res) => {
     const ownerId = req.params.ownerId;
     try {
         const shops = await pb.collection("shop").getFullList({
-            filter: `owner = ${ownerId}`, // Filtrer par ID du propriétaire
+            filter: `idUser = ${ownerId}`, // Filtrer par ID du propriétaire
         });
         if (shops.length > 0) {
             res.json(shops);
@@ -84,7 +87,7 @@ router.get("/shop/favorites/:userId", async (req, res) => {
         if (favorites.length > 0) {
             const favoriteShops = [];
             for (const fav of favorites) {
-                const shop = await req.pb.collection("shops").getOne(fav.shopId);
+                const shop = await req.pb.collection("shop").getOne(fav.shopId);
                 favoriteShops.push(shop);
             }
             res.json(favoriteShops);
@@ -104,7 +107,7 @@ router.get("/shop/search", async (req, res) => {
     }
 
     try {
-        const matchingShops = await pb.collection("shops").getFullList({
+        const matchingShops = await pb.collection("shop").getFullList({
             filter: `name ~ "${query}"`, // Rechercher par nom (insensible à la casse)
         });
         if (matchingShops.length > 0) {
@@ -121,7 +124,7 @@ router.get("/shop/search", async (req, res) => {
 router.get("/shop/:id", async (req, res) => {
     const shopId = req.params.id;
     try {
-        const shop = await pb.collection("shops").getOne(shopId);
+        const shop = await pb.collection("shop").getOne(shopId);
         res.status(200).json(shop);
     } catch (err) {
         res.status(404).json({ message: "Aucun shop trouvé avec cet ID." });
@@ -129,25 +132,26 @@ router.get("/shop/:id", async (req, res) => {
 });
 
 // Route pour ajouter un nouveau shop
-router.post("/shop", async (req, res) => {
-    const { name, description, address, phone, owner } = req.body;
+router.post("/shop", upload.single('image'), async (req, res) => {
+    const { name, description, posX, posY, address, owner, dist } = req.body;
 
-    if (!name || !description || !address || !phone || !owner || !items || !dist || !posX || !posY) {
+    if (!name || !description || !posX || !posY || !address || !owner || !dist) {
         return res.status(400).json({ error: "Tous les champs obligatoires doivent être renseignés." });
     }
 
     try {
+        // Convertir posX et posY en nombres
+        const positionX = parseFloat(posX);
+        const positionY = parseFloat(posY);
+
         const newShop = await pb.collection("shop").create({
             name,
             description,
-            posX,
-            posY,
+            positionX,
+            positionY,
             address,
-            images,
-            phone,
-            owner,
+            idUser: owner,
             dist,
-            items
         });
         res.status(201).json(newShop);
     } catch (err) {

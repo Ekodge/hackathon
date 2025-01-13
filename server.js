@@ -18,6 +18,8 @@ await pb.collection('_superusers').authWithPassword(creds.mail, creds.pass, {
     autoRefreshThreshold: 30 * 60 // Auto refresh en cas de token expiré
 });
 
+pb.autoCancellation(false);
+
 export default pb;
 
 // Middleware généraux
