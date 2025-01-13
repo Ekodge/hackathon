@@ -50,10 +50,11 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ message: "Email ou mot de passe incorrect." });
         }
 
-        console.log("Utilisateur connecté :", data);
         return res.status(200).json({
             message: "Connexion réussie",
-            role: "user",
+            email: data.user.email,
+            role: data.user.role,
+            token: data.session.access_token,
             userId: data.user.id,
         });
     } catch (err) {
