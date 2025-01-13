@@ -125,6 +125,14 @@ export default {
     this.fetchCart(); // Récupère les items du panier pour l'utilisateur
   },
   methods: {
+    isUserShop() {
+      this.shop && this.shop.idUser == this.userId;
+    },
+    editShop() {
+      this.shop.items = [];
+      localStorage.setItem("shopData", JSON.stringify(this.shop)); // Stockez les données dans localStorage
+      this.$router.push({ name: "EditShop" }); // Naviguez vers la page d'édition
+    },
     fetchShopDetails() {
       const shopId = this.$route.params.id; // Récupère l'ID du shop depuis l'URL
       fetch(`http://localhost:3000/api/shop/${shopId}`) // Appel à l'API pour les détails du shop
