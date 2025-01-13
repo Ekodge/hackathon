@@ -200,10 +200,6 @@ router.put("/shop/:id", upload.single("image"), async (req, res) => {
 
         if (error) throw error;
 
-        if (!updatedShop || updatedShop.length === 0) {
-            return res.status(404).json({ error: "Shop non trouvé." });
-        }
-
         res.status(200).json({ message: "Shop mis à jour avec succès.", shop: updatedShop });
     } catch (err) {
         console.error(err);

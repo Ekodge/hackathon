@@ -113,7 +113,14 @@ export default {
   methods: {
     async submitForm() {
       try {
-        // Exemple d'utilisation d'une API de géocodage pour obtenir les coordonnées à partir de l'adresse
+        // Vérifier l'existence de l'ID du shop
+        const shopId = this.form.id; // Assurez-vous que l'ID est bien présent dans le formulaire
+        if (!shopId) {
+          alert("L'identifiant du shop est manquant.");
+          return;
+        }
+
+        // Géocodage pour obtenir les coordonnées (posX et posY)
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
             this.form.address
@@ -122,20 +129,52 @@ export default {
         const data = await response.json();
 
         if (data.length > 0) {
-          const posX = data[0].lon;
-          const posY = data[0].lat;
-          console.log("posX:", posX);
-          console.log("posY:", posY);
+          this.form.posX = data[0].lon;
+          this.form.posY = data[0].lat;
         } else {
           console.error("Adresse introuvable");
+          return; // Arrêter si l'adresse est invalide
+        }
+
+        // Préparation des données
+        const formData = new FormData();
+        for (const key in this.form) {
+          if (key === "items") {
+            this.form.items.forEach((item, index) => {
+              formData.append(`items[${index}][name]`, item.name);
+              formData.append(`items[${index}][price]`, item.price);
+              formData.append(`items[${index}][quantity]`, item.quantity);
+              formData.append(`items[${index}][endDate]`, item.endDate);
+              if (item.image) {
+                formData.append(`items[${index}][image]`, item.image);
+              }
+            });
+          } else {
+            formData.append(key, this.form[key]);
+          }
+        }
+
+        // Appel à l'API PUT
+        const apiResponse = await fetch(`http://localhost:3000/api/shop/${shopId}`, {
+          method: "PUT",
+          body: formData,
+        });
+
+        if (apiResponse.ok) {
+          const result = await apiResponse.json();
+          console.log("Shop mis à jour avec succès :", result);
+          alert("Le shop a été mis à jour avec succès !");
+        } else {
+          console.error("Erreur lors de la mise à jour :", apiResponse.statusText);
+          alert("Une erreur est survenue lors de la mise à jour.");
         }
       } catch (error) {
-        console.error("Erreur lors du géocodage:", error);
+        console.error("Erreur lors de la soumission :", error);
+        alert("Une erreur est survenue. Veuillez réessayer.");
       }
-
-      console.log("Données modifiées :", this.form);
-      // Vous pouvez ici envoyer `this.form` à une API pour sauvegarder les modifications
     },
+
+
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
