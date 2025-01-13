@@ -131,6 +131,7 @@ export default {
       cart: [], // Panier local initialisé à vide
       userId: localStorage.getItem("userId"), // Récupérer l'ID de l'utilisateur connecté
       isFavorite: false,
+      isUserShop: false,
     };
   },
   mounted() {
@@ -138,8 +139,10 @@ export default {
     this.fetchCart(); // Récupère les items du panier pour l'utilisateur
   },
   methods: {
-    isUserShop() {
-      this.shop && this.shop.idUser == this.userId;
+    isUserShopFunction() {
+      if (this.shop && this.userId) {
+        this.isUserShop = this.shop.idUser == this.userId;
+      }
     },
     editShop() {
       localStorage.setItem("shopData", JSON.stringify(this.shop)); // Stockez les données dans localStorage
@@ -154,6 +157,7 @@ export default {
         })
         .then((data) => {
           this.shop = data;
+          this.isUserShopFunction();
 
           // Vérifie si le shop est dans les favoris de l'utilisateur
           fetch(`http://localhost:3000/api/favorite/check`, {
