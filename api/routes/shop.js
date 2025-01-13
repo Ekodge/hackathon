@@ -73,6 +73,30 @@ router.get("/shop/favorites/:userId", async (req, res) => {
     }
 });
 
+router.post("/favorite/check", async (req, res) => {
+    const { userId, shopId } = req.body;
+
+    if (!userId || !shopId) {
+        return res.status(400).json({ error: "Les champs userId et shopId sont requis." });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from("favorite")
+            .select("*")
+            .eq("idUser", userId)
+            .eq("idShop", shopId);
+
+        if (error) throw error;
+
+        res.status(200).json({ isFavorite: data.length > 0 });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de la vérification des favoris." });
+    }
+});
+
+
 // Route pour rechercher les shops par nom
 router.get("/shop/search", async (req, res) => {
     const { query } = req.query;
@@ -147,6 +171,47 @@ router.post("/shop", upload.single("image"), async (req, res) => {
     }
 });
 
+// Route pour éditer un shop existant
+router.put("/shop/:id", upload.single("image"), async (req, res) => {
+    const shopId = req.params.id;
+    const { name, description, posX, posY, address, dist, phone } = req.body;
+
+    // Vérification des champs obligatoires
+    if (!name && !description && !posX && !posY && !address && !dist && !phone) {
+        return res.status(400).json({ error: "Au moins un champ doit être renseigné pour la mise à jour." });
+    }
+
+    try {
+        // Création d'un objet contenant uniquement les champs renseignés
+        const updates = {};
+        if (name) updates.name = name;
+        if (description) updates.description = description;
+        if (posX) updates.positionX = parseFloat(posX);
+        if (posY) updates.positionY = parseFloat(posY);
+        if (address) updates.address = address;
+        if (dist) updates.dist = dist;
+        if (phone) updates.phone = phone;
+
+        // Mise à jour dans la base de données
+        const { data: updatedShop, error } = await supabase
+            .from("shop")
+            .update(updates)
+            .eq("id", shopId);
+
+        if (error) throw error;
+
+        if (!updatedShop || updatedShop.length === 0) {
+            return res.status(404).json({ error: "Shop non trouvé." });
+        }
+
+        res.status(200).json({ message: "Shop mis à jour avec succès.", shop: updatedShop });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du shop." });
+    }
+});
+
+
 // Route pour suivre un shop
 router.post("/shop/follow", async (req, res) => {
     const { userId, shopId } = req.body;
@@ -160,8 +225,8 @@ router.post("/shop/follow", async (req, res) => {
         const { data: existingFavorite, error: fetchError } = await supabase
             .from("favorite")
             .select("*")
-            .eq("userId", userId)
-            .eq("shopId", shopId)
+            .eq("idUser", userId)
+            .eq("idShop", shopId)
             .single();
 
         if (fetchError && fetchError.code !== "PGRST116") {
@@ -175,7 +240,7 @@ router.post("/shop/follow", async (req, res) => {
         // Ajouter le couple userId et shopId dans la table favorite
         const { error: insertError } = await supabase
             .from("favorite")
-            .insert([{ userId, shopId }]);
+            .insert([{ idUser: userId, idShop: shopId }]);
 
         if (insertError) throw insertError;
 
@@ -199,7 +264,7 @@ router.post("/shop/unfollow", async (req, res) => {
         const { error: deleteError } = await supabase
             .from("favorite")
             .delete()
-            .match({ userId, shopId });
+            .match({ idUser: userId, idShop: shopId });
 
         if (deleteError) throw deleteError;
 

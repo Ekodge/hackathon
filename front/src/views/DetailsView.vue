@@ -19,6 +19,16 @@
       <!-- Bouton pour copier le lien -->
       <button @click="copyLink" class="copy-btn">Copier le lien</button>
       <p v-if="copySuccess" class="success-msg">Lien copié dans le presse-papiers !</p>
+
+      <!-- Bouton pour ajouter/retirer des favoris -->
+      <button 
+        @click="toggleFavorite" 
+        :class="{'favorite-btn': !isFavorite, 'unfavorite-btn': isFavorite}">
+        {{ isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+      </button>
+      <p :class="{'favorite-msg': isFavorite, 'unfavorite-msg': !isFavorite}">
+        {{ isFavorite ? 'Magasin ajouté aux favoris.' : 'Magasin retiré des favoris.' }}
+      </p>
     </div>
 
     <!-- Message d'erreur si la récupération échoue -->
@@ -118,6 +128,7 @@ export default {
       errorMessage: null,
       cart: [], // Panier local initialisé à vide
       userId: localStorage.getItem("userId"), // Récupérer l'ID de l'utilisateur connecté
+      isFavorite: false,
     };
   },
   mounted() {
@@ -142,9 +153,50 @@ export default {
         })
         .then((data) => {
           this.shop = data;
+
+          // Vérifie si le shop est dans les favoris de l'utilisateur
+          fetch(`http://localhost:3000/api/favorite/check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: this.userId,
+              shopId: this.shop.id,
+            }),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              this.isFavorite = result.isFavorite;
+            })
+            .catch((error) => {
+              console.error("Erreur lors de la vérification des favoris :", error);
+            });
         })
         .catch((error) => {
           this.errorMessage = error.message;
+        });
+    },
+    toggleFavorite() {
+      const url = this.isFavorite
+        ? `http://localhost:3000/api/shop/unfollow`
+        : `http://localhost:3000/api/shop/follow`;
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: this.userId,
+          shopId: this.shop.id,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Erreur lors de la mise à jour des favoris.");
+          return response.json();
+        })
+        .then(() => {
+          this.isFavorite = !this.isFavorite;
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la mise à jour des favoris :", error);
         });
     },
     fetchCart() {
