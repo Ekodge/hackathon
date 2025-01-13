@@ -288,6 +288,21 @@ export default {
       alert("Votre panier a été validé !");
       this.cart = []; // Réinitialiser le panier local
     },
+    copyLink() {
+      // Récupère l'URL complète du shop en utilisant l'ID de l'entreprise
+      const linkToCopy = `${window.location.origin}/shop/${this.shop.id}`;
+      
+      // Utilise l'API Clipboard pour copier l'URL dans le presse-papiers
+      navigator.clipboard.writeText(linkToCopy).then(() => {
+        this.copySuccess = true; // Afficher le message de succès
+        setTimeout(() => {
+          this.copySuccess = false; // Masquer le message après 2 secondes
+        }, 2000);
+      }).catch((err) => {
+        console.error('Erreur lors de la copie :', err);
+        this.copySuccess = false; // Si une erreur se produit, ne pas afficher le message
+      });
+    },
   },
 };
 </script>

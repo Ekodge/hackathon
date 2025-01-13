@@ -13,10 +13,6 @@
       <button type="submit">Se connecter</button>
     </form>
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <p>
-      gallaisflorian01@gmail.com <br>
-      aaaaaaaa
-    </p>
   </div>
 </template>
 
