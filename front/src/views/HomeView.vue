@@ -129,4 +129,9 @@ export default {
 .result-item:hover {
   background-color: #f0f0f0;
 }
+
+img{
+  height: 180px;
+}
+
 </style>
