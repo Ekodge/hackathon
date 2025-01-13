@@ -141,10 +141,14 @@ export default {
         for (const key in this.form) {
           if (key === "items") {
             this.form.items.forEach((item, index) => {
+              if(item.id) {
+                formData.append(`items[${index}][id]`, item.id);
+              }
               formData.append(`items[${index}][name]`, item.name);
               formData.append(`items[${index}][price]`, item.price);
               formData.append(`items[${index}][quantity]`, item.quantity);
               formData.append(`items[${index}][endDate]`, item.endDate);
+              formData.append(`items[${index}][idShop]`, shopId);
               if (item.image) {
                 formData.append(`items[${index}][image]`, item.image);
               }

@@ -155,7 +155,7 @@ router.get("/shop/:id", async (req, res) => {
 
 // Route pour ajouter un nouveau shop
 router.post("/shop", upload.single("image"), async (req, res) => {
-    const { name, description, posX, posY, address, owner, dist, phone } = req.body;
+    const { name, description, posX, posY, address, owner, dist, phone, items } = req.body;
 
     if (!name || !description || !posX || !posY || !address || !owner || !dist) {
         return res.status(400).json({ error: "Tous les champs obligatoires doivent être renseignés." });
@@ -187,7 +187,7 @@ router.post("/shop", upload.single("image"), async (req, res) => {
 // Route pour éditer un shop existant
 router.put("/shop/:id", upload.single("image"), async (req, res) => {
     const shopId = req.params.id;
-    const { name, description, posX, posY, address, dist, phone } = req.body;
+    const { name, description, posX, posY, address, dist, phone, items } = req.body;
 
     // Vérification des champs obligatoires
     if (!name && !description && !posX && !posY && !address && !dist && !phone) {
@@ -205,7 +205,7 @@ router.put("/shop/:id", upload.single("image"), async (req, res) => {
         if (dist) updates.dist = dist;
         if (phone) updates.phone = phone;
 
-        // Mise à jour dans la base de données
+        // Mise à jour du shop
         const { data: updatedShop, error } = await supabase
             .from("shop")
             .update(updates)
@@ -213,10 +213,46 @@ router.put("/shop/:id", upload.single("image"), async (req, res) => {
 
         if (error) throw error;
 
-        res.status(200).json({ message: "Shop mis à jour avec succès.", shop: updatedShop });
+        // Mise à jour ou ajout des items
+        if (items && items.length > 0) {
+            for (let item of items) {
+                const itemUpdates = {};
+                if (item.name) itemUpdates.name = item.name;
+                if (item.price) itemUpdates.price = item.price;
+                if (item.quantity) itemUpdates.quantity = item.quantity;
+                if (item.endDate) itemUpdates.endDate = item.endDate;
+
+                // Si l'item a une image, on l'ajoute
+                if (item.image) {
+                    itemUpdates.image = item.image;  // Vous devrez gérer le téléchargement de l'image.
+                }
+
+                if (item.id) {
+                    // Si l'item a un id, on effectue une mise à jour
+                    const { data: updatedItem, error: itemError } = await supabase
+                        .from("item")
+                        .update(itemUpdates)
+                        .eq("id", item.id);
+
+                    if (itemError) throw itemError;
+                } else {
+                    // Si l'item n'a pas d'id (nouvel item), on l'ajoute
+                    const { data: newItem, error: newItemError } = await supabase
+                        .from("item")
+                        .insert({
+                            ...itemUpdates,
+                            idShop: shopId, // Associe l'item au shop
+                        });
+
+                    if (newItemError) throw newItemError;
+                }
+            }
+        }
+
+        res.status(200).json({ message: "Shop et items mis à jour avec succès.", shop: updatedShop });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors de la mise à jour du shop." });
+        res.status(500).json({ error: "Erreur lors de la mise à jour du shop ou des items." });
     }
 });
 
