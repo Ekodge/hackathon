@@ -153,7 +153,7 @@ router.get("/shop/:id", async (req, res) => {
     }
 });
 
-// Route pour ajouter un nouveau shop
+// Route pour ajouter un nouveau shop avec des items
 router.post("/shop", upload.single("image"), async (req, res) => {
     const { name, description, posX, posY, address, owner, dist, phone, items } = req.body;
 
@@ -162,7 +162,8 @@ router.post("/shop", upload.single("image"), async (req, res) => {
     }
 
     try {
-        const { data: newShop, error } = await supabase.from("shop").insert([
+        // Création du shop
+        const { data: newShop, error: shopError } = await supabase.from("shop").insert([
             {
                 name,
                 description,
@@ -173,14 +174,42 @@ router.post("/shop", upload.single("image"), async (req, res) => {
                 dist,
                 phone
             },
-        ]);
+        ]).select();
 
-        if (error) throw error;
+        if (shopError) throw shopError;
 
-        res.status(201).json(newShop);
+        // Ajout des items si disponibles
+        if (items && items.length > 0) {
+            const itemPromises = items.map(async (item) => {
+                const itemUpdates = {
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    endDate: item.endDate,
+                    idShop: newShop[0].id, // Associer l'item au nouveau shop
+                };
+
+                // Si l'item a une image, on l'ajoute
+                if (item.image) {
+                    itemUpdates.image = item.image;  // Vous devrez gérer le téléchargement de l'image.
+                }
+
+                // Insérer l'item dans la table "item"
+                const { data: newItem, error: newItemError } = await supabase
+                    .from("item")
+                    .insert(itemUpdates);
+
+                if (newItemError) throw newItemError;
+            });
+
+            // Attendre que tous les items soient ajoutés
+            await Promise.all(itemPromises);
+        }
+
+        res.status(201).json({ message: "Shop et items créés avec succès.", shop: newShop });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors de la création du shop." });
+        res.status(500).json({ error: "Erreur lors de la création du shop ou des items." });
     }
 });
 
@@ -255,7 +284,6 @@ router.put("/shop/:id", upload.single("image"), async (req, res) => {
         res.status(500).json({ error: "Erreur lors de la mise à jour du shop ou des items." });
     }
 });
-
 
 // Route pour suivre un shop
 router.post("/shop/follow", async (req, res) => {
